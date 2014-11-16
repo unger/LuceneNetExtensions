@@ -1,11 +1,7 @@
 ﻿namespace LuceneNetExtensions.Tests
 {
-    using Lucene.Net.Analysis.Standard;
-    using Lucene.Net.Documents;
     using Lucene.Net.Index;
     using Lucene.Net.Search;
-    using Lucene.Net.Store;
-    using Lucene.Net.Util;
 
     using LuceneNetExtensions.Tests.Model;
 
@@ -32,7 +28,7 @@
         [Test]
         public void Test()
         {
-            var query = new TermQuery(new Term("Name", "Magnus"));
+            var query = new TermQuery(new Term("Name", "magnus"));
             var totalHits = 0;
 
             using (var searcher = this.IndexManager.GetSearcher<Person>())
