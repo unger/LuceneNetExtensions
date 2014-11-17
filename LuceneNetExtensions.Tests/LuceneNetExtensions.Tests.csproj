@@ -51,7 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicTests.cs" />
-    <Compile Include="Model\Person.cs" />
+    <Compile Include="Model\Sighting.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
