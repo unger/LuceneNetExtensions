@@ -1,14 +1,9 @@
-﻿using System;
-
-namespace LuceneNetExtensions
+﻿namespace LuceneNetExtensions
 {
-    using System.Web.Hosting;
+    using System;
 
-    using Lucene.Net.Analysis;
-    using Lucene.Net.Analysis.Standard;
     using Lucene.Net.Index;
     using Lucene.Net.Store;
-    using Lucene.Net.Util;
 
     using Directory = Lucene.Net.Store.Directory;
 
@@ -16,12 +11,12 @@ namespace LuceneNetExtensions
     {
         private readonly IndexWriter writer;
 
-        private readonly IndexMapper<T> mapper;
+        private readonly IndexMapper mapper;
 
-        public IndexWriter(string indexPath)
+        public IndexWriter(string indexPath, IndexMapper mapper)
         {
-            writer = new IndexWriter(this.GetDirectory(indexPath), this.GetAnalyzer(), true, IndexWriter.MaxFieldLength.UNLIMITED);
-            mapper = new IndexMapper<T>();
+            this.writer = new IndexWriter(this.GetDirectory(indexPath), mapper.GetAnalyzer<T>(), true, IndexWriter.MaxFieldLength.UNLIMITED);
+            this.mapper = mapper;
         }
 
         public void AddDocument(T doc)
@@ -31,7 +26,7 @@ namespace LuceneNetExtensions
 
         public void Dispose()
         {
-            writer.Dispose();
+            this.writer.Dispose();
         }
 
         public void Optimize()
@@ -41,12 +36,7 @@ namespace LuceneNetExtensions
 
         public IndexSearcher<T> GetSearcher()
         {
-            return new IndexSearcher<T>(this.writer);
-        }
-
-        private Analyzer GetAnalyzer()
-        {
-            return new StandardAnalyzer(Version.LUCENE_30);
+            return new IndexSearcher<T>(this.writer, this.mapper);
         }
 
         private Directory GetDirectory(string indexPath)
@@ -56,7 +46,7 @@ namespace LuceneNetExtensions
                 return new RAMDirectory();
             }
 
-            return FSDirectory.Open(HostingEnvironment.MapPath(indexPath));
+            return FSDirectory.Open(indexPath);
         }
     }
 }

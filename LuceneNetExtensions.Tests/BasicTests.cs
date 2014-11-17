@@ -1,7 +1,10 @@
 ﻿namespace LuceneNetExtensions.Tests
 {
+    using Lucene.Net.Analysis.Standard;
     using Lucene.Net.Index;
+    using Lucene.Net.QueryParsers;
     using Lucene.Net.Search;
+    using Lucene.Net.Util;
 
     using LuceneNetExtensions.Tests.Model;
 
@@ -15,7 +18,7 @@
         [SetUp]
         public void Setup()
         {
-            this.IndexManager = new IndexManager();
+            this.IndexManager = new IndexManager(new IndexMapper());
 
             var writer = this.IndexManager.GetWriter<Person>();
 
@@ -28,8 +31,8 @@
         [Test]
         public void Test()
         {
-            var query = new TermQuery(new Term("Name", "magnus"));
-            var totalHits = 0;
+            var query = new TermQuery(new Term("Name", "Magnus"));
+            int totalHits;
 
             using (var searcher = this.IndexManager.GetSearcher<Person>())
             {

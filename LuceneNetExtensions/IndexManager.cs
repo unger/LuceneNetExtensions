@@ -3,33 +3,36 @@
     using System;
     using System.Collections.Concurrent;
     using System.IO;
-    using System.Linq;
 
-    public class IndexManager: IDisposable
+    public class IndexManager : IDisposable
     {
-        private readonly string basePath = null;
+        private readonly string basePath;
 
         private readonly ConcurrentDictionary<string, IDisposable> writers = new ConcurrentDictionary<string, IDisposable>();
 
-        public IndexManager()
-            :this(string.Empty)
-        {}
+        private readonly IndexMapper mapper;
 
-        public IndexManager(string basePath)
+        public IndexManager(IndexMapper mapper)
+            : this(string.Empty, mapper)
+        {
+        }
+
+        public IndexManager(string basePath, IndexMapper mapper)
         {
             this.basePath = basePath;
+            this.mapper = mapper;
         }
 
         public IndexWriter<T> GetWriter<T>()
         {
-            var indexName = this.GetIndexName<T>();
+            var indexName = this.mapper.GetIndexName<T>();
             string indexPath = null;
-            if (!string.IsNullOrEmpty(basePath))
+            if (!string.IsNullOrEmpty(this.basePath))
             {
                 indexPath = Path.Combine(this.basePath, indexName);
             }
 
-            return writers.GetOrAdd(indexName, key => new IndexWriter<T>(indexPath)) as IndexWriter<T>;
+            return this.writers.GetOrAdd(indexName, key => new IndexWriter<T>(indexPath, this.mapper)) as IndexWriter<T>;
         }
 
         public IndexSearcher<T> GetSearcher<T>()
@@ -38,17 +41,12 @@
             return writer.GetSearcher();
         }
 
-        private string GetIndexName<T>()
-        {
-            return typeof(T).Name;
-        }
-
         public void Dispose()
         {
-            foreach (var key in writers.Keys)
+            foreach (var key in this.writers.Keys)
             {
                 IDisposable writer;
-                if (writers.TryRemove(key, out writer))
+                if (this.writers.TryRemove(key, out writer))
                 {
                     writer.Dispose();
                 }
