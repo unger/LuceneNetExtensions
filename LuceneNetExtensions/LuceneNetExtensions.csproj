@@ -47,7 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="SimpleTypeConverter.cs" />
     <Compile Include="IndexManager.cs" />
     <Compile Include="IndexMapper.cs" />
     <Compile Include="IndexSearcher.cs" />
