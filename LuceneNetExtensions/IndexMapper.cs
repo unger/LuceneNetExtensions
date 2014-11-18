@@ -1,6 +1,8 @@
 ﻿namespace LuceneNetExtensions
 {
     using System;
+    using System.Collections.Generic;
+    using System.Collections.Specialized;
     using System.Reflection;
 
     using Lucene.Net.Analysis;
@@ -25,13 +27,16 @@
         public T CreateEntity<T>(Document doc)
         {
             var entity = Activator.CreateInstance<T>();
+
             var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
             foreach (var prop in properties)
             {
-                var field = doc.GetField(prop.Name);
-                if (field != null)
+                var propertyValues = doc.GetValues(prop.Name);
+
+                if (propertyValues.Length > 0)
                 {
-                    prop.SetValue(entity, field.StringValue);
+                    var typedValue = SimpleTypeConverter.ConvertValue(prop.PropertyType, propertyValues);
+                    prop.SetValue(entity, typedValue, null);
                 }
             }
 
