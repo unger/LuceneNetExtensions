@@ -1,11 +1,15 @@
 ﻿namespace LuceneNetExtensions.Tests
 {
+    using System.Collections.Generic;
+
     using Lucene.Net.Analysis.Standard;
     using Lucene.Net.Index;
     using Lucene.Net.QueryParsers;
     using Lucene.Net.Search;
     using Lucene.Net.Util;
 
+    using LuceneNetExtensions.Cfg;
+    using LuceneNetExtensions.Mapping;
     using LuceneNetExtensions.Tests.Model;
 
     using NUnit.Framework;
@@ -15,10 +19,24 @@
     {
         private IndexManager IndexManager { get; set; }
 
+        public class SightingMap : IndexClassMap<Sighting>
+        {
+            public SightingMap()
+            {
+                
+            }
+        }
+
         [SetUp]
         public void Setup()
         {
-            this.IndexManager = new IndexManager(new IndexMapper());
+            this.IndexManager = FluentIndexConfiguration.Create()
+              .IndexRootPath(null)
+              .Mappings(m =>
+              {
+                  m.Add<SightingMap>();
+              })
+              .BuildIndexManager();
 
             var writer = this.IndexManager.GetWriter<Sighting>();
 

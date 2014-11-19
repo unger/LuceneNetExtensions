@@ -5,6 +5,7 @@
 
     using Lucene.Net.Index;
     using Lucene.Net.Search;
+    using Lucene.Net.Store;
 
     public class IndexSearcher<T> : IDisposable
     {
@@ -12,10 +13,20 @@
 
         private readonly IndexMapper mapper;
 
-        public IndexSearcher(IndexWriter writer, IndexMapper mapper)
+        public IndexSearcher(Directory path, IndexMapper mapper, bool readOnly = false)
+            : this(new IndexSearcher(path, readOnly), mapper)
+        {
+        }
+
+        public IndexSearcher(IndexReader reader, IndexMapper mapper) 
+            : this(new IndexSearcher(reader), mapper)
+        {
+        }
+
+        public IndexSearcher(IndexSearcher searcher, IndexMapper mapper)
         {
             this.mapper = mapper;
-            this.searcher = new IndexSearcher(writer.GetReader());
+            this.searcher = searcher;
         }
 
         public SearchResult<T> Search(Query query, int count = 1000)

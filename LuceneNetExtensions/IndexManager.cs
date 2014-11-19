@@ -4,11 +4,16 @@
     using System.Collections.Concurrent;
     using System.IO;
 
+    using Lucene.Net.Index;
+    using Lucene.Net.Store;
+
+    using Directory = Lucene.Net.Store.Directory;
+
     public class IndexManager : IDisposable
     {
         private readonly string basePath;
 
-        private readonly ConcurrentDictionary<string, IDisposable> writers = new ConcurrentDictionary<string, IDisposable>();
+        private readonly ConcurrentDictionary<string, IndexWriter> indexWriters = new ConcurrentDictionary<string, IndexWriter>();
 
         private readonly IndexMapper mapper;
 
@@ -25,6 +30,40 @@
 
         public IndexWriter<T> GetWriter<T>()
         {
+            var writer = this.InternalGetWriter<T>();
+            return new IndexWriter<T>(writer, this.mapper);
+        }
+
+        public IndexSearcher<T> GetSearcher<T>()
+        {
+            var writer = this.InternalGetWriter<T>();
+            return new IndexSearcher<T>(writer.GetReader(), this.mapper);
+        }
+
+        public void Dispose()
+        {
+            foreach (var key in this.indexWriters.Keys)
+            {
+                IndexWriter writer;
+                if (this.indexWriters.TryRemove(key, out writer))
+                {
+                    writer.Dispose();
+                }
+            }
+        }
+
+        private Directory GetDirectory(string indexPath)
+        {
+            if (string.IsNullOrEmpty(indexPath))
+            {
+                return new RAMDirectory();
+            }
+
+            return FSDirectory.Open(indexPath);
+        }
+
+        private string GetIndexFullPath<T>()
+        {
             var indexName = this.mapper.GetIndexName<T>();
             string indexPath = null;
             if (!string.IsNullOrEmpty(this.basePath))
@@ -32,25 +71,15 @@
                 indexPath = Path.Combine(this.basePath, indexName);
             }
 
-            return this.writers.GetOrAdd(indexName, key => new IndexWriter<T>(indexPath, this.mapper)) as IndexWriter<T>;
+            return indexPath;
         }
 
-        public IndexSearcher<T> GetSearcher<T>()
+        private IndexWriter InternalGetWriter<T>()
         {
-            var writer = this.GetWriter<T>();
-            return writer.GetSearcher();
-        }
+            var indexName = this.mapper.GetIndexName<T>();
+            var indexPath = this.GetIndexFullPath<T>();
 
-        public void Dispose()
-        {
-            foreach (var key in this.writers.Keys)
-            {
-                IDisposable writer;
-                if (this.writers.TryRemove(key, out writer))
-                {
-                    writer.Dispose();
-                }
-            }
+            return this.indexWriters.GetOrAdd(indexName, key => new IndexWriter(this.GetDirectory(indexPath), this.mapper.GetAnalyzer<T>(), IndexWriter.MaxFieldLength.UNLIMITED));
         }
     }
 }

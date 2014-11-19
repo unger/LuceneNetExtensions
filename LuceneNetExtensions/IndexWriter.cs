@@ -3,9 +3,6 @@
     using System;
 
     using Lucene.Net.Index;
-    using Lucene.Net.Store;
-
-    using Directory = Lucene.Net.Store.Directory;
 
     public class IndexWriter<T> : IDisposable
     {
@@ -13,9 +10,9 @@
 
         private readonly IndexMapper mapper;
 
-        public IndexWriter(string indexPath, IndexMapper mapper)
+        public IndexWriter(IndexWriter writer, IndexMapper mapper)
         {
-            this.writer = new IndexWriter(this.GetDirectory(indexPath), mapper.GetAnalyzer<T>(), true, IndexWriter.MaxFieldLength.UNLIMITED);
+            this.writer = writer;
             this.mapper = mapper;
         }
 
@@ -34,19 +31,9 @@
             this.writer.Optimize();
         }
 
-        public IndexSearcher<T> GetSearcher()
+        public void Commit()
         {
-            return new IndexSearcher<T>(this.writer, this.mapper);
-        }
-
-        private Directory GetDirectory(string indexPath)
-        {
-            if (string.IsNullOrEmpty(indexPath))
-            {
-                return new RAMDirectory();
-            }
-
-            return FSDirectory.Open(indexPath);
+            this.writer.Commit();
         }
     }
 }
