@@ -53,6 +53,8 @@
     <Compile Include="Mapping\IIndexMappingProvider.cs" />
     <Compile Include="Mapping\IndexClassMap.cs" />
     <Compile Include="Mapping\IndexFieldMap.cs" />
+    <Compile Include="QueryHelper.cs" />
+    <Compile Include="Reflection\ReflectionHelper.cs" />
     <Compile Include="SimpleTypeConverter.cs" />
     <Compile Include="IndexManager.cs" />
     <Compile Include="IndexMapper.cs" />

@@ -40,6 +40,11 @@
             return new IndexSearcher<T>(writer.GetReader(), this.mapper);
         }
 
+        public QueryHelper<T> GetQueryHelper<T>()
+        {
+            return new QueryHelper<T>(this.mapper);
+        }
+
         public void Dispose()
         {
             foreach (var key in this.indexWriters.Keys)

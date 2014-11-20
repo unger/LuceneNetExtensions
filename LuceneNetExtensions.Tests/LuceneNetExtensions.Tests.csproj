@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicTests.cs" />
+    <Compile Include="Mapping\SightingMap.cs" />
     <Compile Include="Model\Sighting.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -10,11 +10,23 @@
         public IndexFieldMap(PropertyInfo prop)
         {
             this.prop = prop;
+            this.FieldName = prop.Name;
+            this.FieldType = prop.PropertyType;
         }
 
         public string FieldName { get; set; }
 
-        public Type FieldType
+        public Type FieldType { get; set; }
+
+        public string PropertyName
+        {
+            get
+            {
+                return this.prop.Name;
+            }
+        }
+
+        public Type PropertyType
         {
             get
             {

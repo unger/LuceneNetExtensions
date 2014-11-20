@@ -1,24 +1,25 @@
 ﻿namespace LuceneNetExtensions
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Reflection;
+    using System.Linq.Expressions;
 
     using Lucene.Net.Analysis;
     using Lucene.Net.Documents;
 
     using LuceneNetExtensions.Mapping;
+    using LuceneNetExtensions.Reflection;
 
     public class IndexMapper
     {
-        private readonly ConcurrentDictionary<string, IIndexMappingProvider> mappers = new ConcurrentDictionary<string, IIndexMappingProvider>();
-        private List<IIndexMappingProvider> mappingProviders;
+        private readonly Dictionary<string, IIndexMappingProvider> mappers = new Dictionary<string, IIndexMappingProvider>();
 
-        public IndexMapper(List<IIndexMappingProvider> mappingProviders)
+        public IndexMapper(IEnumerable<IIndexMappingProvider> mappingProviders)
         {
-            this.mappingProviders = mappingProviders;
+            foreach (var mapper in mappingProviders)
+            {
+                this.mappers.Add(mapper.ModelType.FullName, mapper);
+            }
         }
 
         public Document CreateDocument<T>(T entity)
@@ -45,7 +46,7 @@
 
                 if (propertyValues.Length > 0)
                 {
-                    var typedValue = SimpleTypeConverter.ConvertValue(field.FieldType, propertyValues);
+                    var typedValue = SimpleTypeConverter.ConvertValue(field.PropertyType, propertyValues);
                     field.SetValue(entity, typedValue);
                 }
             }
@@ -55,12 +56,36 @@
 
         public Analyzer GetAnalyzer<T>()
         {
-            return new KeywordAnalyzer();
+            var mapper = this.GetMapper<T>();
+            return mapper.Analyzer;
         }
 
         public string GetIndexName<T>()
         {
-            return typeof(T).Name;
+            var mapper = this.GetMapper<T>();
+            return mapper.IndexName;
+        }
+
+        public string GetFieldName<TMapping, TReturn>(Expression<Func<TMapping, TReturn>> expression)
+        {
+            var field = this.GetFieldMap(expression);
+            return (field == null) ? string.Empty : field.FieldName;
+        }
+
+        private IndexFieldMap GetFieldMap<TMapping, TReturn>(Expression<Func<TMapping, TReturn>> expression)
+        {
+            var mapper = this.GetMapper<TMapping>();
+            var prop = ReflectionHelper.GetPropertyInfo(expression);
+
+            foreach (var field in mapper.Fields)
+            {
+                if (prop.Name == field.PropertyName)
+                {
+                    return field;
+                }
+            }
+
+            return null;
         }
 
         private Field CreateField<T>(IndexFieldMap field, T entity)
@@ -72,13 +97,7 @@
 
         private IIndexMappingProvider GetMapper<T>()
         {
-            var fullname = typeof(T).FullName;
-            return this.mappers.GetOrAdd(fullname, key => this.InternalGetMapper<T>());
-        }
-
-        private IIndexMappingProvider InternalGetMapper<T>()
-        {
-            return this.mappingProviders.FirstOrDefault(p => p.ModelType == typeof(T));
+            return this.mappers[typeof(T).FullName];
         }
     }
 }

@@ -3,10 +3,16 @@
     using System;
     using System.Collections.Generic;
 
+    using Lucene.Net.Analysis;
+
     public interface IIndexMappingProvider
     {
         Type ModelType { get; }
 
         List<IndexFieldMap> Fields { get; }
+
+        string IndexName { get; }
+
+        Analyzer Analyzer { get; }
     }
 }
