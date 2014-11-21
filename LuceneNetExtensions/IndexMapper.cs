@@ -29,7 +29,7 @@
 
             foreach (var field in mapper.Fields)
             {
-                document.Add(this.CreateField(field, entity));
+                document.Add(field.CreateField(entity));
             }
 
             return document;
@@ -86,13 +86,6 @@
             }
 
             return null;
-        }
-
-        private Field CreateField<T>(IndexFieldMap field, T entity)
-        {
-            var value = field.GetValue(entity);
-
-            return new Field(field.FieldName, value.ToString(), Field.Store.YES, Field.Index.ANALYZED);
         }
 
         private IIndexMappingProvider GetMapper<T>()
