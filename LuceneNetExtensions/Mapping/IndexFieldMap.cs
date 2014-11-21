@@ -93,7 +93,7 @@
         private IndexFieldMap SetAnalyzed(Field.Index index, Analyzer fieldAnalyzer = null)
         {
             this.analyzer = fieldAnalyzer;
-            this.fieldIndex = Field.Index.NO;
+            this.fieldIndex = index;
             return this;
         }
     }
