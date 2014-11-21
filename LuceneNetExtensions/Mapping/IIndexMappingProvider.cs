@@ -13,6 +13,6 @@
 
         string IndexName { get; }
 
-        Analyzer Analyzer { get; }
+        Analyzer GetAnalyzer();
     }
 }

@@ -12,6 +12,7 @@
 
         private Field.Store fieldStore = Field.Store.YES;
         private Field.Index fieldIndex = Field.Index.NOT_ANALYZED;
+        private Field.TermVector fieldTermVector = Field.TermVector.NO;
 
         private Analyzer analyzer;
 
@@ -74,10 +75,34 @@
             return this.SetAnalyzed(Field.Index.ANALYZED_NO_NORMS);
         }
 
+        public IndexFieldMap TermVector()
+        {
+            this.fieldTermVector = Field.TermVector.YES;
+            return this;
+        }
+
+        public IndexFieldMap TermVectorWithOffsets()
+        {
+            this.fieldTermVector = Field.TermVector.WITH_OFFSETS;
+            return this;
+        }
+
+        public IndexFieldMap TermVectorWithPositions()
+        {
+            this.fieldTermVector = Field.TermVector.WITH_POSITIONS;
+            return this;
+        }
+
+        public IndexFieldMap TermVectorWithPositionsAndOffsets()
+        {
+            this.fieldTermVector = Field.TermVector.WITH_POSITIONS_OFFSETS;
+            return this;
+        }
+
         public Field CreateField<T>(T entity)
         {
             var value = this.GetValue(entity);
-            return new Field(this.FieldName, value.ToString(), this.fieldStore, this.fieldIndex);
+            return new Field(this.FieldName, value.ToString(), this.fieldStore, this.fieldIndex, this.fieldTermVector);
         }
 
         public void SetValue(object obj, object value)
@@ -88,6 +113,11 @@
         public object GetValue(object obj)
         {
             return this.prop.GetValue(obj);
+        }
+
+        public Analyzer GetAnalyzer()
+        {
+            return this.analyzer;
         }
 
         private IndexFieldMap SetAnalyzed(Field.Index index, Analyzer fieldAnalyzer = null)

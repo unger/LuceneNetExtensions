@@ -57,7 +57,7 @@
         public Analyzer GetAnalyzer<T>()
         {
             var mapper = this.GetMapper<T>();
-            return mapper.Analyzer;
+            return mapper.GetAnalyzer();
         }
 
         public string GetIndexName<T>()
