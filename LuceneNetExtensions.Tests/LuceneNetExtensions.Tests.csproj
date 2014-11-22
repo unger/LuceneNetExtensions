@@ -52,8 +52,11 @@
   <ItemGroup>
     <Compile Include="BasicTests.cs" />
     <Compile Include="IndexClassMapTests.cs" />
+    <Compile Include="Mapping\ProfileRuleMap.cs" />
     <Compile Include="Mapping\SightingMap.cs" />
+    <Compile Include="Model\ProfileRule.cs" />
     <Compile Include="Model\Sighting.cs" />
+    <Compile Include="ProfileRuleTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
