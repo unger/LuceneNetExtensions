@@ -9,7 +9,7 @@
     {
         Type ModelType { get; }
 
-        List<IndexFieldMap> Fields { get; }
+        IReadOnlyCollection<IndexFieldMap> Fields { get; }
 
         string IndexName { get; }
 

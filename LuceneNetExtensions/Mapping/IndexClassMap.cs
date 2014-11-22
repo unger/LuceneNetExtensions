@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
@@ -21,7 +22,7 @@
 
         private Version version = Version.LUCENE_30;
 
-        private Analyzer defaultAnalyzer = null;
+        private Analyzer documentAnalyzer;
 
         public Type ModelType
         {
@@ -31,11 +32,11 @@
             }
         }
 
-        public List<IndexFieldMap> Fields
+        public IReadOnlyCollection<IndexFieldMap> Fields
         {
             get
             {
-                return this.fields.Select(kvp => kvp.Value).ToList();
+                return new ReadOnlyCollection<IndexFieldMap>(this.fields.Select(kvp => kvp.Value).ToList());
             }
         }
 
@@ -59,29 +60,36 @@
 
         public Analyzer GetAnalyzer()
         {
-            var analyzer = this.defaultAnalyzer ?? new StandardAnalyzer(this.version);
-            var usePerFieldAnalyzer = false;
-
-            var fieldAnalyzers = new List<KeyValuePair<string, Analyzer>>();
-            foreach (var field in this.Fields)
+            if (this.documentAnalyzer == null)
             {
-                var fieldAnalyzer = field.GetAnalyzer();
-                if (fieldAnalyzer != null)
+                var analyzer = new StandardAnalyzer(this.version);
+                var usePerFieldAnalyzer = false;
+
+                var fieldAnalyzers = new List<KeyValuePair<string, Analyzer>>();
+                foreach (var field in this.Fields)
                 {
-                    fieldAnalyzers.Add(new KeyValuePair<string, Analyzer>(field.FieldName, fieldAnalyzer));
-                    if (!fieldAnalyzer.GetType().FullName.Equals(analyzer.GetType().FullName))
+                    var fieldAnalyzer = field.GetAnalyzer();
+                    if (fieldAnalyzer != null)
                     {
-                        usePerFieldAnalyzer = true;
+                        fieldAnalyzers.Add(new KeyValuePair<string, Analyzer>(field.FieldName, fieldAnalyzer));
+                        if (!fieldAnalyzer.GetType().FullName.Equals(analyzer.GetType().FullName))
+                        {
+                            usePerFieldAnalyzer = true;
+                        }
                     }
+                }
+
+                if (usePerFieldAnalyzer)
+                {
+                    this.documentAnalyzer = new PerFieldAnalyzerWrapper(analyzer, fieldAnalyzers);
+                }
+                else
+                {
+                    this.documentAnalyzer = analyzer;
                 }
             }
 
-            if (usePerFieldAnalyzer)
-            {
-                return new PerFieldAnalyzerWrapper(analyzer, fieldAnalyzers);
-            }
-
-            return analyzer;
+            return this.documentAnalyzer;
         }
 
         protected void Index(string name)
@@ -91,7 +99,7 @@
 
         protected void Analyzer(Analyzer analyzer)
         {
-            this.defaultAnalyzer = analyzer;
+            this.documentAnalyzer = analyzer;
         }
 
         protected IndexFieldMap Map(Expression<Func<T, object>> propertyExpression)

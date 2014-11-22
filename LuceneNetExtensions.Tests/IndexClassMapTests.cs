@@ -11,8 +11,6 @@
     [TestFixture]
     public class IndexClassMapTests
     {
-
-
         [SetUp]
         public void Setup()
         {
@@ -37,7 +35,6 @@
 
             Assert.AreEqual(typeof(KeywordAnalyzer).FullName, analyzer.GetType().FullName);
         }
-
 
         [Test]
         public void ClassMapWithKeywordAnalyzerOnAFieldShouldHavePerFieldAnalyzer()
@@ -68,6 +65,5 @@
                 this.Map(s => s.SpeciesName).Analyzed(new KeywordAnalyzer());
             }
         }
-
     }
 }
