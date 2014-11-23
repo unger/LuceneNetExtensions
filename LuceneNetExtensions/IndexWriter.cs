@@ -4,21 +4,23 @@
 
     using Lucene.Net.Index;
 
+    using LuceneNetExtensions.Mapping;
+
     public class IndexWriter<T> : IDisposable
     {
         private readonly IndexWriter writer;
 
-        private readonly IndexMapper mapper;
+        private readonly IIndexMappingProvider<T> mapper;
 
-        public IndexWriter(IndexWriter writer, IndexMapper mapper)
+        public IndexWriter(IndexWriter writer, IIndexMappingProvider<T> mapper)
         {
             this.writer = writer;
             this.mapper = mapper;
         }
 
-        public void AddDocument(T doc)
+        public void AddDocument(T entity)
         {
-            this.writer.AddDocument(this.mapper.CreateDocument(doc));
+            this.writer.AddDocument(this.mapper.CreateDocument(entity));
         }
 
         public void Dispose()

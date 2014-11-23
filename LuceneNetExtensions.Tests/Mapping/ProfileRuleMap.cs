@@ -7,7 +7,7 @@
     {
         public ProfileRuleMap()
         {
-            this.Index("ProfileRules");
+            this.IndexName("ProfileRules");
 
             this.Map(s => s.Species);
             this.Map(s => s.Provinces);

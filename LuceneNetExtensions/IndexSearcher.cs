@@ -7,23 +7,25 @@
     using Lucene.Net.Search;
     using Lucene.Net.Store;
 
+    using LuceneNetExtensions.Mapping;
+
     public class IndexSearcher<T> : IDisposable
     {
         private readonly IndexSearcher searcher;
 
-        private readonly IndexMapper mapper;
+        private readonly IIndexMappingProvider<T> mapper;
 
-        public IndexSearcher(Directory path, IndexMapper mapper, bool readOnly = false)
+        public IndexSearcher(Directory path, IIndexMappingProvider<T> mapper, bool readOnly = false)
             : this(new IndexSearcher(path, readOnly), mapper)
         {
         }
 
-        public IndexSearcher(IndexReader reader, IndexMapper mapper) 
+        public IndexSearcher(IndexReader reader, IIndexMappingProvider<T> mapper) 
             : this(new IndexSearcher(reader), mapper)
         {
         }
 
-        public IndexSearcher(IndexSearcher searcher, IndexMapper mapper)
+        public IndexSearcher(IndexSearcher searcher, IIndexMappingProvider<T> mapper)
         {
             this.mapper = mapper;
             this.searcher = searcher;
@@ -40,7 +42,7 @@
             foreach (var scoreDoc in topDocs.ScoreDocs)
             {
                 var doc = this.searcher.Doc(scoreDoc.Doc);
-                searchResult.Hits.Add(this.mapper.CreateEntity<T>(doc));
+                searchResult.Hits.Add(this.mapper.CreateEntity(doc));
             }
 
             return searchResult;

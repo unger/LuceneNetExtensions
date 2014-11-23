@@ -9,12 +9,13 @@
 
     using Lucene.Net.Analysis;
     using Lucene.Net.Analysis.Standard;
+    using Lucene.Net.Documents;
 
     using LuceneNetExtensions.Reflection;
 
     using Version = Lucene.Net.Util.Version;
 
-    public class IndexClassMap<T> : IIndexMappingProvider
+    public class IndexClassMap<T> : IIndexMappingProvider<T>
     {
         private readonly Dictionary<string, IndexFieldMap> fields = new Dictionary<string, IndexFieldMap>();
 
@@ -40,22 +41,14 @@
             }
         }
 
-        public string IndexName
+        public string GetIndexName()
         {
-            get
+            if (string.IsNullOrWhiteSpace(this.indexName))
             {
-                if (string.IsNullOrWhiteSpace(this.indexName))
-                {
-                    return typeof(T).Name;
-                }
-
-                return this.indexName;
+                return typeof(T).Name;
             }
 
-            private set
-            {
-                this.indexName = value;
-            }
+            return this.indexName;
         }
 
         public Analyzer GetAnalyzer()
@@ -92,9 +85,46 @@
             return this.documentAnalyzer;
         }
 
-        protected void Index(string name)
+
+        public Document CreateDocument(T entity)
         {
-            this.IndexName = name;
+            var document = new Document();
+
+            foreach (var field in this.Fields)
+            {
+                document.Add(field.CreateField(entity));
+            }
+
+            return document;
+        }
+
+        public T CreateEntity(Document doc)
+        {
+            var entity = Activator.CreateInstance<T>();
+
+            foreach (var field in this.Fields)
+            {
+                var propertyValues = doc.GetValues(field.FieldName);
+
+                if (propertyValues.Length > 0)
+                {
+                    var typedValue = SimpleTypeConverter.ConvertValue(field.PropertyType, propertyValues);
+                    field.SetValue(entity, typedValue);
+                }
+            }
+
+            return entity;
+        }
+
+        public string GetFieldName<TMapping, TReturn>(Expression<Func<TMapping, TReturn>> expression)
+        {
+            var field = this.GetFieldMap(expression);
+            return (field == null) ? string.Empty : field.FieldName;
+        }
+
+        protected void IndexName(string name)
+        {
+            this.indexName = name;
         }
 
         protected void Analyzer(Analyzer analyzer)
@@ -136,6 +166,21 @@
             this.fields.Add(property.Name, fieldMap);
 
             return fieldMap;
+        }
+
+        private IndexFieldMap GetFieldMap<TMapping, TReturn>(Expression<Func<TMapping, TReturn>> expression)
+        {
+            var prop = ReflectionHelper.GetPropertyInfo(expression);
+
+            foreach (var field in this.Fields)
+            {
+                if (prop.Name == field.PropertyName)
+                {
+                    return field;
+                }
+            }
+
+            return null;
         }
     }
 }

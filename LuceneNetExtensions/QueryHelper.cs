@@ -6,11 +6,13 @@
     using Lucene.Net.Index;
     using Lucene.Net.Search;
 
+    using LuceneNetExtensions.Mapping;
+
     public class QueryHelper<T>
     {
-        private readonly IndexMapper mapper;
+        private readonly IIndexMappingProvider<T> mapper;
 
-        public QueryHelper(IndexMapper mapper)
+        public QueryHelper(IIndexMappingProvider<T> mapper)
         {
             this.mapper = mapper;
         }

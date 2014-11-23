@@ -24,7 +24,7 @@ namespace LuceneNetExtensions.Cfg
 
         public IndexManager BuildIndexManager()
         {
-            var mapper = new IndexMapper(this.Mappings);
+            var mapper = new IndexMappers(this.Mappings);
             return new IndexManager(this.IndexRootPath, mapper);
         }
     }

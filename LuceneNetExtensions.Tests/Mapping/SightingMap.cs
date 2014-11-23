@@ -7,7 +7,7 @@
     {
         public SightingMap()
         {
-            this.Index("Sightings");
+            this.IndexName("Sightings");
 
             this.Map(s => s.SpeciesName, "Artnamn");
             this.Map(s => s.Province, "Landskap");

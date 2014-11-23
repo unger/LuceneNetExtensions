@@ -57,7 +57,7 @@
     <Compile Include="Reflection\ReflectionHelper.cs" />
     <Compile Include="SimpleTypeConverter.cs" />
     <Compile Include="IndexManager.cs" />
-    <Compile Include="IndexMapper.cs" />
+    <Compile Include="IndexMappers.cs" />
     <Compile Include="IndexSearcher.cs" />
     <Compile Include="IndexWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
