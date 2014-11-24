@@ -48,5 +48,11 @@
 
             return query;
         }
+
+        public SortField CreateSortField<TReturn>(Expression<Func<T, TReturn>> expression, bool reverse = false)
+        {
+            var fieldname = this.mapper.GetFieldName(expression);
+            return new SortField(fieldname, SortField.STRING, reverse);
+        }
     }
 }

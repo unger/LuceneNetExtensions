@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace LuceneNetExtensions.Cfg
+﻿namespace LuceneNetExtensions.Cfg
 {
+    using System.Collections.Generic;
+
     using LuceneNetExtensions.Mapping;
 
     public class IndexConfiguration

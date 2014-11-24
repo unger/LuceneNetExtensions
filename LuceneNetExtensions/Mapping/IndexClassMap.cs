@@ -25,6 +25,8 @@
 
         private Analyzer documentAnalyzer;
 
+        private bool readonlyIndex;
+
         public Type ModelType
         {
             get
@@ -49,6 +51,11 @@
             }
 
             return this.indexName;
+        }
+
+        public bool IsReadonly()
+        {
+            return this.readonlyIndex;
         }
 
         public Analyzer GetAnalyzer()
@@ -116,10 +123,15 @@
             return entity;
         }
 
-        public string GetFieldName<TMapping, TReturn>(Expression<Func<TMapping, TReturn>> expression)
+        public string GetFieldName<TReturn>(Expression<Func<T, TReturn>> expression)
         {
             var field = this.GetFieldMap(expression);
             return (field == null) ? string.Empty : field.FieldName;
+        }
+
+        protected void Readonly()
+        {
+            this.readonlyIndex = true;
         }
 
         protected void IndexName(string name)

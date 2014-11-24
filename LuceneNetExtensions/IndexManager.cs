@@ -5,7 +5,10 @@
     using System.IO;
 
     using Lucene.Net.Index;
+    using Lucene.Net.Search;
     using Lucene.Net.Store;
+
+    using LuceneNetExtensions.Mapping;
 
     using Directory = Lucene.Net.Store.Directory;
 
@@ -31,15 +34,20 @@
         public IndexWriter<T> GetWriter<T>()
         {
             var classMapper = this.mapper.GetMapper<T>();
-            var writer = this.InternalGetWriter<T>();
+            if (classMapper.IsReadonly())
+            {
+                throw new Exception("Cannot create writer on readonly index");
+            }
+
+            var writer = this.InternalGetWriter(classMapper);
             return new IndexWriter<T>(writer, classMapper);
         }
 
         public IndexSearcher<T> GetSearcher<T>()
         {
             var classMapper = this.mapper.GetMapper<T>();
-            var writer = this.InternalGetWriter<T>();
-            return new IndexSearcher<T>(writer.GetReader(), classMapper);
+            var searcher = this.InternalGetSearcher(classMapper);
+            return new IndexSearcher<T>(searcher, classMapper);
         }
 
         public QueryHelper<T> GetQueryHelper<T>()
@@ -70,10 +78,8 @@
             return FSDirectory.Open(indexPath);
         }
 
-        private string GetIndexFullPath<T>()
+        private string GetIndexFullPath(string indexName)
         {
-            var classMapper = this.mapper.GetMapper<T>();
-            var indexName = classMapper.GetIndexName();
             string indexPath = null;
             if (!string.IsNullOrEmpty(this.basePath))
             {
@@ -83,13 +89,26 @@
             return indexPath;
         }
 
-        private IndexWriter InternalGetWriter<T>()
+        private IndexWriter InternalGetWriter<T>(IIndexMappingProvider<T> classMapper)
         {
-            var classMapper = this.mapper.GetMapper<T>();
             var indexName = classMapper.GetIndexName();
-            var indexPath = this.GetIndexFullPath<T>();
+            var indexPath = this.GetIndexFullPath(indexName);
 
             return this.indexWriters.GetOrAdd(indexName, key => new IndexWriter(this.GetDirectory(indexPath), classMapper.GetAnalyzer(), IndexWriter.MaxFieldLength.UNLIMITED));
+        }
+
+        private IndexSearcher InternalGetSearcher<T>(IIndexMappingProvider<T> classMapper)
+        {
+            var indexName = classMapper.GetIndexName();
+            var indexPath = this.GetIndexFullPath(indexName);
+
+            if (classMapper.IsReadonly())
+            {
+                return new IndexSearcher(this.GetDirectory(indexPath), true);
+            }
+
+            var writer = this.InternalGetWriter(classMapper);
+            return new IndexSearcher(writer.GetReader());
         }
     }
 }

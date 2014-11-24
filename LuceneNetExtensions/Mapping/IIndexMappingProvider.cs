@@ -13,7 +13,7 @@
 
         T CreateEntity(Document doc);
 
-        string GetFieldName<TMapping, TReturn>(Expression<Func<TMapping, TReturn>> expression);
+        string GetFieldName<TReturn>(Expression<Func<T, TReturn>> expression);
     }
 
     public interface IIndexMappingProvider
@@ -25,5 +25,7 @@
         string GetIndexName();
 
         Analyzer GetAnalyzer();
+
+        bool IsReadonly();
     }
 }

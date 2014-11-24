@@ -20,21 +20,26 @@
         {
         }
 
-        public IndexSearcher(IndexReader reader, IIndexMappingProvider<T> mapper) 
-            : this(new IndexSearcher(reader), mapper)
-        {
-        }
-
         public IndexSearcher(IndexSearcher searcher, IIndexMappingProvider<T> mapper)
         {
             this.mapper = mapper;
             this.searcher = searcher;
         }
 
-        public SearchResult<T> Search(Query query, int count = 1000)
+        public SearchResult<T> Search(Query query, int n = 1000)
+        {
+            return this.Search(query, null, n, null);
+        }
+
+        public SearchResult<T> Search(Query query, Filter filter, int n = 1000)
+        {
+            return this.Search(query, filter, n, null);
+        }
+
+        public SearchResult<T> Search(Query query, Filter filter, int n, Sort sort)
         {
             var searchResult = new SearchResult<T>();
-            var topDocs = this.searcher.Search(query, count);
+            TopDocs topDocs = sort == null ? this.searcher.Search(query, filter, n) : this.searcher.Search(query, filter, n, sort);
 
             searchResult.TotalHits = topDocs.TotalHits;
             searchResult.Hits = new List<T>();
@@ -47,6 +52,7 @@
 
             return searchResult;
         }
+
 
         public void Dispose()
         {

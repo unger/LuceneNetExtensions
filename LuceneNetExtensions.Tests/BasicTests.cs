@@ -75,6 +75,26 @@
             Assert.AreEqual(2, totalHits);
         }
 
+        [Test]
+        public void Test3()
+        {
+            var qh = this.IndexManager.GetQueryHelper<Sighting>();
+
+
+            var sort = new Sort(qh.CreateSortField(s => s.Province));
+
+            var query = new TermQuery(qh.CreateTerm(s => s.SpeciesName, "Praktejder"));
+            int totalHits;
+
+            using (var searcher = this.IndexManager.GetSearcher<Sighting>())
+            {
+                var result = searcher.Search(query, null, 1000, sort);
+                totalHits = result.TotalHits;
+            }
+
+            Assert.AreEqual(3, totalHits);
+        }
+
         [TearDown]
         public void TearDown()
         {
