@@ -129,6 +129,21 @@
             return (field == null) ? string.Empty : field.FieldName;
         }
 
+        public IndexFieldMap GetFieldMap<TReturn>(Expression<Func<T, TReturn>> expression)
+        {
+            var prop = ReflectionHelper.GetPropertyInfo(expression);
+
+            foreach (var field in this.Fields)
+            {
+                if (prop.Name == field.PropertyName)
+                {
+                    return field;
+                }
+            }
+
+            return null;
+        }
+
         protected void Readonly()
         {
             this.readonlyIndex = true;
@@ -178,21 +193,6 @@
             this.fields.Add(property.Name, fieldMap);
 
             return fieldMap;
-        }
-
-        private IndexFieldMap GetFieldMap<TMapping, TReturn>(Expression<Func<TMapping, TReturn>> expression)
-        {
-            var prop = ReflectionHelper.GetPropertyInfo(expression);
-
-            foreach (var field in this.Fields)
-            {
-                if (prop.Name == field.PropertyName)
-                {
-                    return field;
-                }
-            }
-
-            return null;
         }
     }
 }

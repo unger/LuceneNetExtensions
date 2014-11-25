@@ -1,5 +1,8 @@
 ﻿namespace LuceneNetExtensions.Tests
 {
+    using System;
+    using System.Linq.Expressions;
+
     using Lucene.Net.Search;
 
     using LuceneNetExtensions.Cfg;
@@ -80,10 +83,9 @@
         {
             var qh = this.IndexManager.GetQueryHelper<Sighting>();
 
+            var sort = qh.CreateSort(qh.CreateSortField(s => s.Province, true));
 
-            var sort = new Sort(qh.CreateSortField(s => s.Province));
-
-            var query = new TermQuery(qh.CreateTerm(s => s.SpeciesName, "Praktejder"));
+            var query = qh.CreateTermQuery(s => s.SpeciesName, "Praktejder");
             int totalHits;
 
             using (var searcher = this.IndexManager.GetSearcher<Sighting>())

@@ -14,6 +14,8 @@
         T CreateEntity(Document doc);
 
         string GetFieldName<TReturn>(Expression<Func<T, TReturn>> expression);
+
+        IndexFieldMap GetFieldMap<TReturn>(Expression<Func<T, TReturn>> expression);
     }
 
     public interface IIndexMappingProvider

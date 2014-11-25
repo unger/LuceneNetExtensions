@@ -1,6 +1,8 @@
 ﻿namespace LuceneNetExtensions
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Linq.Expressions;
 
     using Lucene.Net.Index;
@@ -51,8 +53,28 @@
 
         public SortField CreateSortField<TReturn>(Expression<Func<T, TReturn>> expression, bool reverse = false)
         {
-            var fieldname = this.mapper.GetFieldName(expression);
-            return new SortField(fieldname, SortField.STRING, reverse);
+            var field = this.mapper.GetFieldMap(expression);
+            return new SortField(field.FieldName, this.GetSortFieldType(field), reverse);
+        }
+
+        public Sort CreateSort(params SortField[] sortfields)
+        {
+            return new Sort(sortfields);
+        }
+
+        private int GetSortFieldType(IndexFieldMap field)
+        {
+            if (field.FieldType.IsAssignableFrom(typeof(int)))
+            {
+                return SortField.INT;
+            }
+
+            if (field.FieldType.IsAssignableFrom(typeof(string)))
+            {
+                return SortField.STRING;
+            }
+
+            return SortField.STRING;
         }
     }
 }
