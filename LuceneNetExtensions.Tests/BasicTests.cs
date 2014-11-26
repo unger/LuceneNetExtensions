@@ -97,6 +97,27 @@
             Assert.AreEqual(3, totalHits);
         }
 
+        [Test]
+        public void Test4()
+        {
+            var qh = this.IndexManager.GetQueryHelper<Sighting>();
+
+            var sort = qh.CreateSort(qh.CreateSortField(s => s.Province, true));
+
+            var filter = new FieldCacheTermsFilter(qh.GetFieldName(s => s.Province), "Halland");
+
+            var query = qh.CreateTermQuery(s => s.SpeciesName, "Praktejder");
+            int totalHits;
+
+            using (var searcher = this.IndexManager.GetSearcher<Sighting>())
+            {
+                var result = searcher.Search(query, filter, 1000, sort);
+                totalHits = result.TotalHits;
+            }
+
+            Assert.AreEqual(1, totalHits);
+        }
+
         [TearDown]
         public void TearDown()
         {

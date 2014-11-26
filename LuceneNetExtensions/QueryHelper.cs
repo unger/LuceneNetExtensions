@@ -19,9 +19,14 @@
             this.mapper = mapper;
         }
 
+        public string GetFieldName<TReturn>(Expression<Func<T, TReturn>> expression)
+        {
+            return this.mapper.GetFieldName(expression);
+        }
+
         public Term CreateTerm<TReturn>(Expression<Func<T, TReturn>> expression, string value)
         {
-            return new Term(this.mapper.GetFieldName(expression), value);
+            return new Term(this.GetFieldName(expression), value);
         }
 
         public Query CreateTermQuery<TReturn>(Expression<Func<T, TReturn>> expression, string value)
@@ -41,7 +46,7 @@
                 return this.CreateTermQuery(expression, values[0]);
             }
 
-            var fieldname = this.mapper.GetFieldName(expression);
+            var fieldname = this.GetFieldName(expression);
             var query = new BooleanQuery();
             foreach (var value in values)
             {
