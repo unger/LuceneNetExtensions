@@ -38,18 +38,8 @@
 
         public SearchResult<T> Search(Query query, Filter filter, int n, Sort sort)
         {
-            var searchResult = new SearchResult<T>();
             TopDocs topDocs = sort == null ? this.searcher.Search(query, filter, n) : this.searcher.Search(query, filter, n, sort);
-
-            searchResult.TotalHits = topDocs.TotalHits;
-            searchResult.Hits = new List<T>();
-
-            foreach (var scoreDoc in topDocs.ScoreDocs)
-            {
-                var doc = this.searcher.Doc(scoreDoc.Doc);
-                searchResult.Hits.Add(this.mapper.CreateEntity(doc));
-            }
-
+            var searchResult = new SearchResult<T>(this.searcher, this.mapper, topDocs);
             return searchResult;
         }
 

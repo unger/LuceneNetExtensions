@@ -1,6 +1,8 @@
 ﻿namespace LuceneNetExtensions.Tests
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Linq.Expressions;
 
     using Lucene.Net.Search;
@@ -116,6 +118,25 @@
             }
 
             Assert.AreEqual(1, totalHits);
+        }
+
+        [Test]
+        public void Test5()
+        {
+            var qh = this.IndexManager.GetQueryHelper<Sighting>();
+
+            var query = qh.CreateTermQuery(s => s.SpeciesName, "Praktejder");
+            int totalHits;
+            List<Sighting> sightings;
+
+            using (var searcher = this.IndexManager.GetSearcher<Sighting>())
+            {
+                var result = searcher.Search(query, null, 1000, null);
+
+                sightings = result.Skip(1).Take(1).ToList();
+            }
+
+            Assert.AreEqual(1, sightings.Count);
         }
 
         [TearDown]
