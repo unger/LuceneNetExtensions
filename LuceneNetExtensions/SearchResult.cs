@@ -2,6 +2,7 @@
 {
     using System.Collections;
     using System.Collections.Generic;
+    using System.Linq;
 
     using Lucene.Net.Search;
 
@@ -20,6 +21,7 @@
             this.searcher = searcher;
             this.mapper = mapper;
             this.topDocs = topDocs;
+            this.PageSize = 20;
         }
 
         public int TotalHits
@@ -28,6 +30,26 @@
             {
                 return this.topDocs.TotalHits;
             }
+        }
+
+        public int PageSize { get; set; }
+
+        public int TotalPages
+        {
+            get
+            {
+                if (this.TotalHits % this.PageSize == 0)
+                {
+                    return this.TotalHits / this.PageSize;
+                }
+
+                return this.TotalHits / this.PageSize + 1;
+            }
+        }
+
+        public IEnumerable<T> GetPage(int page)
+        {
+            return this.Skip((page - 1) * this.PageSize).Take(this.PageSize);
         }
 
         public IEnumerator<T> GetEnumerator()

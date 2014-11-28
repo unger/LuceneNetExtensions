@@ -133,10 +133,10 @@
             {
                 var result = searcher.Search(query, null, 1000, null);
 
-                sightings = result.Skip(1).Take(1).ToList();
+                sightings = result.GetPage(2).ToList();
             }
 
-            Assert.AreEqual(1, sightings.Count);
+            Assert.AreEqual(3, sightings.Count);
         }
 
         [TearDown]
