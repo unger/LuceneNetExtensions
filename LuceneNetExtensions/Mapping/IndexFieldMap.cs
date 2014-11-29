@@ -99,6 +99,11 @@
             return this;
         }
 
+        public Field CreateEmptyField()
+        {
+            return new Field(this.FieldName, string.Empty, this.fieldStore, this.fieldIndex, this.fieldTermVector);
+        }
+
         public Field CreateField<T>(T entity)
         {
             var value = this.GetValue(entity);

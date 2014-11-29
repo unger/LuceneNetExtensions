@@ -20,7 +20,7 @@
 
         public void AddDocument(T entity)
         {
-            this.writer.AddDocument(this.mapper.CreateDocument(entity));
+            this.writer.AddDocument(this.mapper.GetDocument(entity));
         }
 
         public void Dispose()

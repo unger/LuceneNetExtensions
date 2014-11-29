@@ -133,7 +133,7 @@
             {
                 var result = searcher.Search(query, null, 1000, null);
 
-                sightings = result.GetPage(2).ToList();
+                sightings = result.GetPage(1).ToList();
             }
 
             Assert.AreEqual(3, sightings.Count);

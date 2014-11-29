@@ -11,6 +11,8 @@
     {
         Document CreateDocument(T entity);
 
+        Document GetDocument(T entity);
+
         T CreateEntity(Document doc);
 
         string GetFieldName<TReturn>(Expression<Func<T, TReturn>> expression);

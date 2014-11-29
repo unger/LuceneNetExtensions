@@ -27,6 +27,8 @@
 
         private bool readonlyIndex;
 
+        private Document reusableDocument;
+
         public Type ModelType
         {
             get
@@ -40,6 +42,19 @@
             get
             {
                 return new ReadOnlyCollection<IndexFieldMap>(this.fields.Select(kvp => kvp.Value).ToList());
+            }
+        }
+
+        protected Document ReusableDocument
+        {
+            get
+            {
+                if (this.reusableDocument == null)
+                {
+                    this.reusableDocument = this.CreateEmptyDocument();
+                }
+
+                return this.reusableDocument;
             }
         }
 
@@ -92,6 +107,15 @@
             return this.documentAnalyzer;
         }
 
+        public Document GetDocument(T entity)
+        {
+            foreach (var field in this.Fields)
+            {
+                this.ReusableDocument.GetField(field.FieldName).SetValue(field.GetValue(entity).ToString());
+            }
+
+            return this.ReusableDocument;
+        }
 
         public Document CreateDocument(T entity)
         {
@@ -193,6 +217,17 @@
             this.fields.Add(property.Name, fieldMap);
 
             return fieldMap;
+        }
+
+        private Document CreateEmptyDocument()
+        {
+            var document = new Document();
+            foreach (var field in this.Fields)
+            {
+                document.Add(field.CreateEmptyField());
+            }
+
+            return document;
         }
     }
 }
