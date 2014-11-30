@@ -37,5 +37,10 @@
         {
             this.writer.Commit();
         }
+
+        public void DeleteAll()
+        {
+            this.writer.DeleteAll();
+        }
     }
 }

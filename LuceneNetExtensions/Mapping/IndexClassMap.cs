@@ -198,7 +198,7 @@
             var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
             foreach (var prop in properties)
             {
-                if (this.fields.ContainsKey(prop.Name))
+                if (!this.fields.ContainsKey(prop.Name))
                 {
                     this.fields.Add(prop.Name, new IndexFieldMap(prop));
                 }
