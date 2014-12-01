@@ -195,12 +195,7 @@
 
         private IndexFieldMap Map(PropertyInfo property, string fieldName)
         {
-            var fieldMap = new IndexFieldMap(property);
-
-            if (!string.IsNullOrEmpty(fieldName))
-            {
-                fieldMap.FieldName = fieldName;
-            }
+            var fieldMap = new IndexFieldMap(property, fieldName);
 
             this.fields.Add(property.Name, fieldMap);
 

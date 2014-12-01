@@ -23,16 +23,21 @@
         private bool? isNumeric;
 
         public IndexFieldMap(PropertyInfo propertyInfo)
+            : this(propertyInfo, propertyInfo.Name)
+        {
+        }
+
+        public IndexFieldMap(PropertyInfo propertyInfo, string fieldName)
         {
             this.propertyInfo = propertyInfo;
-            this.FieldName = propertyInfo.Name;
+            this.FieldName = string.IsNullOrWhiteSpace(fieldName) ? propertyInfo.Name : fieldName;
             this.FieldType = propertyInfo.PropertyType;
             this.fieldable = this.CreateEmptyField();
         }
 
-        public string FieldName { get; set; }
+        public string FieldName { get; private set; }
 
-        public Type FieldType { get; set; }
+        public Type FieldType { get; private set; }
 
         public string PropertyName
         {

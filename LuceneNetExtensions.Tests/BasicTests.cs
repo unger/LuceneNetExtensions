@@ -35,6 +35,7 @@
             writer.AddDocument(new Sighting { SpeciesName = "Praktejder", Municipality = "Uppsala", Province = "Uppland" });
             writer.AddDocument(new Sighting { SpeciesName = "Praktejder", Municipality = "Varberg", Province = "Halland" });
 
+            writer.Commit();
             writer.Optimize();
         }
 

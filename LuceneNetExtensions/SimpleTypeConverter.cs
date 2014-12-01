@@ -37,6 +37,14 @@
             {
                 var generictype = toType.GetGenericTypeDefinition();
                 var elementType = toType.GetGenericArguments()[0];
+
+                // Handle Nullable separatly
+                if (generictype == typeof(Nullable<>))
+                {
+                    return ConvertSingleValue(elementType, values[0]);
+                }
+
+                // Try to create collection/list
                 var elements = CreateGenericInstance(generictype, elementType);
 
                 if (elements != null)
@@ -59,9 +67,14 @@
             }
 
             // Handle single values, convert the first value to toType
-            if (values[0] is string)
+            return ConvertSingleValue(toType, values[0]);
+        }
+
+        private static object ConvertSingleValue(Type toType, object value)
+        {
+            if (value is string)
             {
-                var stringValue = values[0] as string;
+                var stringValue = value as string;
                 if (toType == typeof(Guid))
                 {
                     return new Guid(stringValue);
@@ -83,7 +96,24 @@
                 }
             }
 
-            return Convert.ChangeType(values[0], toType);
+            try
+            {
+                return Convert.ChangeType(value, toType);
+            }
+            catch (Exception)
+            {
+                return GetDefaultValue(toType);
+            }
+        }
+
+        private static object GetDefaultValue(Type type)
+        {
+            if (type.IsValueType)
+            {
+                return Activator.CreateInstance(type);
+            }
+
+            return null;
         }
 
         private static object CreateGenericInstance(Type generictype, Type elementType)
