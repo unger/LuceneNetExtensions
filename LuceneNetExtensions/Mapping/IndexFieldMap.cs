@@ -8,7 +8,11 @@
 
     public class IndexFieldMap
     {
-        private readonly PropertyInfo prop;
+        private const int FieldPrecision = 4;
+
+        private readonly PropertyInfo propertyInfo;
+
+        private readonly IFieldable fieldable;
 
         private Field.Store fieldStore = Field.Store.YES;
         private Field.Index fieldIndex = Field.Index.NOT_ANALYZED;
@@ -16,11 +20,14 @@
 
         private Analyzer analyzer;
 
-        public IndexFieldMap(PropertyInfo prop)
+        private bool? isNumeric;
+
+        public IndexFieldMap(PropertyInfo propertyInfo)
         {
-            this.prop = prop;
-            this.FieldName = prop.Name;
-            this.FieldType = prop.PropertyType;
+            this.propertyInfo = propertyInfo;
+            this.FieldName = propertyInfo.Name;
+            this.FieldType = propertyInfo.PropertyType;
+            this.fieldable = this.CreateEmptyField();
         }
 
         public string FieldName { get; set; }
@@ -31,7 +38,7 @@
         {
             get
             {
-                return this.prop.Name;
+                return this.propertyInfo.Name;
             }
         }
 
@@ -39,7 +46,32 @@
         {
             get
             {
-                return this.prop.PropertyType;
+                return this.propertyInfo.PropertyType;
+            }
+        }
+
+        public IFieldable Fieldable
+        {
+            get
+            {
+                return this.fieldable;
+            }
+        }
+
+        public bool IsNumeric
+        {
+            get
+            {
+                if (!this.isNumeric.HasValue)
+                {
+                    this.isNumeric = this.FieldType.IsAssignableFrom(typeof(int))
+                                     || this.FieldType.IsAssignableFrom(typeof(decimal))
+                                     || this.FieldType.IsAssignableFrom(typeof(float))
+                                     || this.FieldType.IsAssignableFrom(typeof(double))
+                                     || this.FieldType.IsAssignableFrom(typeof(long));
+                }
+
+                return this.isNumeric.Value;
             }
         }
 
@@ -99,25 +131,19 @@
             return this;
         }
 
-        public Field CreateEmptyField()
+        public void SetPropertyValue<T>(T obj, object value)
         {
-            return new Field(this.FieldName, string.Empty, this.fieldStore, this.fieldIndex, this.fieldTermVector);
+            this.propertyInfo.SetValue(obj, value);
         }
 
-        public Field CreateField<T>(T entity)
+        public object GetPropertyValue<T>(T obj)
         {
-            var value = this.GetValue(entity);
-            return new Field(this.FieldName, value.ToString(), this.fieldStore, this.fieldIndex, this.fieldTermVector);
+            return this.propertyInfo.GetValue(obj);
         }
 
-        public void SetValue(object obj, object value)
+        public void UpdateFieldValue<T>(T entity)
         {
-            this.prop.SetValue(obj, value);
-        }
-
-        public object GetValue(object obj)
-        {
-            return this.prop.GetValue(obj);
+            this.SetFieldValue(this.GetPropertyValue(entity));
         }
 
         public Analyzer GetAnalyzer()
@@ -130,6 +156,52 @@
             this.analyzer = fieldAnalyzer;
             this.fieldIndex = index;
             return this;
+        }
+
+        private IFieldable CreateEmptyField()
+        {
+            if (this.IsNumeric)
+            {
+                return new NumericField(this.FieldName, FieldPrecision, this.fieldStore, this.fieldIndex != Field.Index.NO);
+            }
+
+            return new Field(this.FieldName, string.Empty, this.fieldStore, this.fieldIndex, this.fieldTermVector);
+        }
+
+        private void SetFieldValue(object value)
+        {
+            var field = this.fieldable as Field;
+            if (field != null)
+            {
+                var stringValue = (value ?? string.Empty).ToString();
+                field.SetValue(stringValue);
+                return;
+            }
+
+            var numericField = this.fieldable as NumericField;
+            if (numericField != null)
+            {
+                if (value is int)
+                {
+                    numericField.SetIntValue((int)value);
+                }
+                else if (value is long)
+                {
+                    numericField.SetLongValue((long)value);
+                }
+                else if (value is decimal || value is double)
+                {
+                    numericField.SetDoubleValue(Convert.ToDouble(value));
+                }
+                else if (value is float)
+                {
+                    numericField.SetDoubleValue(Convert.ToSingle(value));
+                }
+                else
+                {
+                    numericField.SetIntValue(0);
+                }
+            }
         }
     }
 }

@@ -69,7 +69,7 @@
 
                 if (toType == typeof(float))
                 {
-                    return float.Parse(stringValue, CultureInfo.InvariantCulture);
+                    return float.Parse(stringValue, CultureInfo.CurrentCulture);
                 }
 
                 if (toType == typeof(int))
@@ -79,7 +79,7 @@
 
                 if (toType == typeof(decimal))
                 {
-                    return decimal.Parse(stringValue, CultureInfo.InvariantCulture);
+                    return decimal.Parse(stringValue, CultureInfo.CurrentCulture);
                 }
             }
 

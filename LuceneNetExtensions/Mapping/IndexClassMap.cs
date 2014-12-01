@@ -111,22 +111,10 @@
         {
             foreach (var field in this.Fields)
             {
-                this.ReusableDocument.GetField(field.FieldName).SetValue(field.GetValue(entity).ToString());
+                field.UpdateFieldValue(entity);
             }
 
             return this.ReusableDocument;
-        }
-
-        public Document CreateDocument(T entity)
-        {
-            var document = new Document();
-
-            foreach (var field in this.Fields)
-            {
-                document.Add(field.CreateField(entity));
-            }
-
-            return document;
         }
 
         public T CreateEntity(Document doc)
@@ -140,7 +128,7 @@
                 if (propertyValues.Length > 0)
                 {
                     var typedValue = SimpleTypeConverter.ConvertValue(field.PropertyType, propertyValues);
-                    field.SetValue(entity, typedValue);
+                    field.SetPropertyValue(entity, typedValue);
                 }
             }
 
@@ -224,7 +212,7 @@
             var document = new Document();
             foreach (var field in this.Fields)
             {
-                document.Add(field.CreateEmptyField());
+                document.Add(field.Fieldable);
             }
 
             return document;

@@ -43,7 +43,7 @@
                     return this.TotalHits / this.PageSize;
                 }
 
-                return this.TotalHits / this.PageSize + 1;
+                return (this.TotalHits / this.PageSize) + 1;
             }
         }
 

@@ -9,8 +9,6 @@
 
     public interface IIndexMappingProvider<T> : IIndexMappingProvider
     {
-        Document CreateDocument(T entity);
-
         Document GetDocument(T entity);
 
         T CreateEntity(Document doc);

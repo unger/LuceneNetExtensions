@@ -2,7 +2,9 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
+    using System.Text;
     using System.Web.Mvc;
 
     using Lucene.Net.Search;
@@ -38,23 +40,48 @@
 
         public ActionResult ReIndex()
         {
+            var sb = new StringBuilder();
+
             try
             {
-                var sightings = this.database.Sightings.Page(1, 100).Items;
+                sb.AppendLine("Start: 0ms");
+                Stopwatch sw = Stopwatch.StartNew();
+                var sightings = this.database.Sightings.All().ToList();
                 var writer = this.indexManager.GetWriter<Sighting>();
                 writer.DeleteAll();
+                sb.AppendLine(string.Format("Delete all: {0}ms", sw.ElapsedMilliseconds));
 
                 foreach (var sighting in sightings)
                 {
-                    writer.AddDocument(sighting);
+                    try
+                    {
+                        writer.AddDocument(sighting);
+                    }
+                    catch (Exception e)
+                    {
+                        
+                        throw;
+                    }
                 }
+
+                sb.AppendLine(string.Format("{0} documents added: {1}ms", sightings.Count, sw.ElapsedMilliseconds));
+
+                writer.Commit();
+
+                sb.AppendLine(string.Format("Committed: {0}ms", sw.ElapsedMilliseconds));
+
+                writer.Optimize();
+
+                sb.AppendLine(string.Format("Optimized: {0}ms", sw.ElapsedMilliseconds));
+
+                sw.Stop();
             }
             catch (Exception e)
             {
                 return new ContentResult { Content = "Error: " + e.Message };
             }
 
-            return new ContentResult { Content = "Done" };
+            return new ContentResult { Content = sb.ToString().Replace("\n", "<br>") };
         }
     }
 }
