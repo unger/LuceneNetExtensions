@@ -1,9 +1,7 @@
 ﻿namespace LuceneNetExtensions
 {
     using System;
-    using System.Collections.Generic;
 
-    using Lucene.Net.Index;
     using Lucene.Net.Search;
     using Lucene.Net.Store;
 
@@ -42,7 +40,6 @@
             var searchResult = new SearchResult<T>(this.searcher, this.mapper, topDocs);
             return searchResult;
         }
-
 
         public void Dispose()
         {

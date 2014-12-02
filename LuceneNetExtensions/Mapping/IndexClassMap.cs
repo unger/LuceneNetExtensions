@@ -17,6 +17,8 @@
 
     public class IndexClassMap<T> : IIndexMappingProvider<T>
     {
+        private readonly Dictionary<string, IndexFieldMap> identifierFields = new Dictionary<string, IndexFieldMap>();
+
         private readonly Dictionary<string, IndexFieldMap> fields = new Dictionary<string, IndexFieldMap>();
 
         private string indexName;
@@ -34,6 +36,14 @@
             get
             {
                 return typeof(T);
+            }
+        }
+
+        public IReadOnlyCollection<IndexFieldMap> Identifiers
+        {
+            get
+            {
+                return new ReadOnlyCollection<IndexFieldMap>(this.identifierFields.Select(kvp => kvp.Value).ToList());
             }
         }
 
@@ -71,6 +81,11 @@
         public bool IsReadonly()
         {
             return this.readonlyIndex;
+        }
+
+        public bool HasIdentifier()
+        {
+            return this.Identifiers.Count > 0;
         }
 
         public Analyzer GetAnalyzer()
@@ -171,6 +186,13 @@
             this.documentAnalyzer = analyzer;
         }
 
+        protected IndexFieldMap Id(Expression<Func<T, object>> propertyExpression)
+        {
+            var fieldMap = this.Map(propertyExpression, null);
+            this.identifierFields.Add(fieldMap.PropertyName, fieldMap);
+            return fieldMap;
+        }
+
         protected IndexFieldMap Map(Expression<Func<T, object>> propertyExpression)
         {
             return this.Map(propertyExpression, null);
@@ -197,7 +219,7 @@
         {
             var fieldMap = new IndexFieldMap(property, fieldName);
 
-            this.fields.Add(property.Name, fieldMap);
+            this.fields.Add(fieldMap.PropertyName, fieldMap);
 
             return fieldMap;
         }

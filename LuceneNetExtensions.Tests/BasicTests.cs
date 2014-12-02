@@ -31,9 +31,9 @@
 
             var writer = this.IndexManager.GetWriter<Sighting>();
 
-            writer.AddDocument(new Sighting { SpeciesName = "Praktejder", Municipality = "Göteborg", Province = "Bohuslän" });
-            writer.AddDocument(new Sighting { SpeciesName = "Praktejder", Municipality = "Uppsala", Province = "Uppland" });
-            writer.AddDocument(new Sighting { SpeciesName = "Praktejder", Municipality = "Varberg", Province = "Halland" });
+            writer.AddOrUpdateDocument(new Sighting { SpeciesName = "Praktejder", Municipality = "Göteborg", Province = "Bohuslän" });
+            writer.AddOrUpdateDocument(new Sighting { SpeciesName = "Praktejder", Municipality = "Uppsala", Province = "Uppland" });
+            writer.AddOrUpdateDocument(new Sighting { SpeciesName = "Praktejder", Municipality = "Varberg", Province = "Halland" });
 
             writer.Commit();
             writer.Optimize();

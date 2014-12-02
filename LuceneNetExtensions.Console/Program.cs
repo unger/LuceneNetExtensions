@@ -28,7 +28,7 @@ namespace LuceneNetExtensions
             int iterations = 1000000;
             for (int i = 0; i < iterations; i++)
             {
-                writer.AddDocument(new Sighting { SpeciesName = "Praktejder", Municipality = "Göteborg", Province = "Bohuslän" });
+                writer.AddOrUpdateDocument(new Sighting { SpeciesName = "Praktejder", Municipality = "Göteborg", Province = "Bohuslän" });
             }
 
             sw.Stop();

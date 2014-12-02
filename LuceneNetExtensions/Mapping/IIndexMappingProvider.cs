@@ -22,6 +22,8 @@
     {
         Type ModelType { get; }
 
+        IReadOnlyCollection<IndexFieldMap> Identifiers { get; }
+
         IReadOnlyCollection<IndexFieldMap> Fields { get; }
 
         string GetIndexName();
@@ -29,5 +31,7 @@
         Analyzer GetAnalyzer();
 
         bool IsReadonly();
+
+        bool HasIdentifier();
     }
 }

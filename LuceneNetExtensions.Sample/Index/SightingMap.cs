@@ -8,6 +8,9 @@
         public SightingMap()
         {
             this.IndexName("Sightings");
+
+            this.Id(s => s.Id);
+
             this.MapPublicProperties();
         }
     }
