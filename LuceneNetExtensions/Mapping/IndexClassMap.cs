@@ -2,20 +2,18 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Collections.ObjectModel;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
 
     using Lucene.Net.Analysis;
     using Lucene.Net.Analysis.Standard;
-    using Lucene.Net.Documents;
 
     using LuceneNetExtensions.Reflection;
 
     using Version = Lucene.Net.Util.Version;
 
-    public class IndexClassMap<T> : IIndexMappingProvider<T>
+    public class IndexClassMap<T> : IIndexClassMap
     {
         private readonly Dictionary<string, IndexFieldMap> identifierFields = new Dictionary<string, IndexFieldMap>();
 
@@ -29,146 +27,14 @@
 
         private bool readonlyIndex;
 
-        private Document reusableDocument;
-
-        public Type ModelType
+        public IIndexMappingProvider BuildMappingProvider()
         {
-            get
-            {
-                return typeof(T);
-            }
-        }
-
-        public IReadOnlyCollection<IndexFieldMap> Identifiers
-        {
-            get
-            {
-                return new ReadOnlyCollection<IndexFieldMap>(this.identifierFields.Select(kvp => kvp.Value).ToList());
-            }
-        }
-
-        public IReadOnlyCollection<IndexFieldMap> Fields
-        {
-            get
-            {
-                return new ReadOnlyCollection<IndexFieldMap>(this.fields.Select(kvp => kvp.Value).ToList());
-            }
-        }
-
-        protected Document ReusableDocument
-        {
-            get
-            {
-                if (this.reusableDocument == null)
-                {
-                    this.reusableDocument = this.CreateEmptyDocument();
-                }
-
-                return this.reusableDocument;
-            }
-        }
-
-        public string GetIndexName()
-        {
-            if (string.IsNullOrWhiteSpace(this.indexName))
-            {
-                return typeof(T).Name;
-            }
-
-            return this.indexName;
-        }
-
-        public bool IsReadonly()
-        {
-            return this.readonlyIndex;
-        }
-
-        public bool HasIdentifier()
-        {
-            return this.Identifiers.Count > 0;
-        }
-
-        public Analyzer GetAnalyzer()
-        {
-            if (this.documentAnalyzer == null)
-            {
-                var analyzer = new StandardAnalyzer(this.version);
-                var usePerFieldAnalyzer = false;
-
-                var fieldAnalyzers = new List<KeyValuePair<string, Analyzer>>();
-                foreach (var field in this.Fields)
-                {
-                    var fieldAnalyzer = field.GetAnalyzer();
-                    if (fieldAnalyzer != null)
-                    {
-                        fieldAnalyzers.Add(new KeyValuePair<string, Analyzer>(field.FieldName, fieldAnalyzer));
-                        if (!fieldAnalyzer.GetType().FullName.Equals(analyzer.GetType().FullName))
-                        {
-                            usePerFieldAnalyzer = true;
-                        }
-                    }
-                }
-
-                if (usePerFieldAnalyzer)
-                {
-                    this.documentAnalyzer = new PerFieldAnalyzerWrapper(analyzer, fieldAnalyzers);
-                }
-                else
-                {
-                    this.documentAnalyzer = analyzer;
-                }
-            }
-
-            return this.documentAnalyzer;
-        }
-
-        public Document GetDocument(T entity)
-        {
-            foreach (var field in this.Fields)
-            {
-                field.UpdateFieldValue(entity);
-            }
-
-            return this.ReusableDocument;
-        }
-
-        public T CreateEntity(Document doc)
-        {
-            var entity = Activator.CreateInstance<T>();
-
-            foreach (var field in this.Fields)
-            {
-                var propertyValues = doc.GetValues(field.FieldName);
-
-                if (propertyValues.Length > 0)
-                {
-                    var typedValue = SimpleTypeConverter.ConvertValue(field.PropertyType, propertyValues);
-                    field.SetPropertyValue(entity, typedValue);
-                }
-            }
-
-            return entity;
-        }
-
-        public string GetFieldName<TReturn>(Expression<Func<T, TReturn>> expression)
-        {
-            var field = this.GetFieldMap(expression);
-            return (field == null) ? string.Empty : field.FieldName;
-        }
-
-        public IndexFieldMap GetFieldMap<TReturn>(Expression<Func<T, TReturn>> expression)
-        {
-            var prop = ReflectionHelper.GetPropertyInfo(expression);
-
-            foreach (var field in this.Fields)
-            {
-                if (prop.Name == field.PropertyName)
-                {
-                    return field;
-                }
-            }
-
-            return null;
+            return new IndexMappingProvider<T>(
+                indexName: this.GetIndexName(),
+                analyzer: this.GetAnalyzer(),
+                isReadonly: this.readonlyIndex,
+                identifierFields: this.identifierFields.Select(kvp => kvp.Value).ToList(),
+                fields: this.fields.Select(kvp => kvp.Value).ToList());
         }
 
         protected void Readonly()
@@ -215,6 +81,50 @@
             }
         }
 
+        private string GetIndexName()
+        {
+            if (string.IsNullOrWhiteSpace(this.indexName))
+            {
+                return typeof(T).Name;
+            }
+
+            return this.indexName;
+        }
+
+        private Analyzer GetAnalyzer()
+        {
+            if (this.documentAnalyzer == null)
+            {
+                var analyzer = new StandardAnalyzer(this.version);
+                var usePerFieldAnalyzer = false;
+
+                var fieldAnalyzers = new List<KeyValuePair<string, Analyzer>>();
+                foreach (var field in this.fields.Select(kvp => kvp.Value))
+                {
+                    var fieldAnalyzer = field.GetAnalyzer();
+                    if (fieldAnalyzer != null)
+                    {
+                        fieldAnalyzers.Add(new KeyValuePair<string, Analyzer>(field.FieldName, fieldAnalyzer));
+                        if (!fieldAnalyzer.GetType().FullName.Equals(analyzer.GetType().FullName))
+                        {
+                            usePerFieldAnalyzer = true;
+                        }
+                    }
+                }
+
+                if (usePerFieldAnalyzer)
+                {
+                    this.documentAnalyzer = new PerFieldAnalyzerWrapper(analyzer, fieldAnalyzers);
+                }
+                else
+                {
+                    this.documentAnalyzer = analyzer;
+                }
+            }
+
+            return this.documentAnalyzer;
+        }
+
         private IndexFieldMap Map(PropertyInfo property, string fieldName)
         {
             var fieldMap = new IndexFieldMap(property, fieldName);
@@ -222,17 +132,6 @@
             this.fields.Add(fieldMap.PropertyName, fieldMap);
 
             return fieldMap;
-        }
-
-        private Document CreateEmptyDocument()
-        {
-            var document = new Document();
-            foreach (var field in this.Fields)
-            {
-                document.Add(field.Fieldable);
-            }
-
-            return document;
         }
     }
 }

@@ -9,7 +9,7 @@
     {
         private readonly List<Type> types = new List<Type>();
 
-        public void Add<T>() where T : IIndexMappingProvider
+        public void Add<T>() where T : IIndexClassMap
         {
             this.types.Add(typeof(T));
         }
@@ -18,8 +18,11 @@
         {
             foreach (var type in this.types)
             {
-                var instance = Activator.CreateInstance(type) as IIndexMappingProvider;
-                config.Mappings.Add(instance);
+                var instance = Activator.CreateInstance(type) as IIndexClassMap;
+                if (instance != null)
+                {
+                    config.Mappings.Add(instance.BuildMappingProvider());
+                }
             }
         }
     }

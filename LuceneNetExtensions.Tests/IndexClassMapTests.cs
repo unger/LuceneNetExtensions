@@ -21,7 +21,7 @@
         {
             var mapping = new SightingsMapWithoutConfiguration();
 
-            var analyzer = mapping.GetAnalyzer();
+            var analyzer = mapping.BuildMappingProvider().GetAnalyzer();
 
             Assert.AreEqual(typeof(StandardAnalyzer).FullName, analyzer.GetType().FullName);
         }
@@ -31,7 +31,7 @@
         {
             var mapping = new SightingsMapWithKeyWordAnalyzer();
 
-            var analyzer = mapping.GetAnalyzer();
+            var analyzer = mapping.BuildMappingProvider().GetAnalyzer();
 
             Assert.AreEqual(typeof(KeywordAnalyzer).FullName, analyzer.GetType().FullName);
         }
@@ -41,7 +41,7 @@
         {
             var mapping = new SightingsMapWithPerFieldAnalyzer();
 
-            var analyzer = mapping.GetAnalyzer();
+            var analyzer = mapping.BuildMappingProvider().GetAnalyzer();
 
             Assert.AreEqual(typeof(PerFieldAnalyzerWrapper).FullName, analyzer.GetType().FullName);
         }

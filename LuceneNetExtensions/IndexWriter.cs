@@ -76,5 +76,10 @@
         {
             this.writer.DeleteAll();
         }
+
+        public void DeleteDocuments(Query query)
+        {
+            this.writer.DeleteDocuments(query);
+        }
     }
 }

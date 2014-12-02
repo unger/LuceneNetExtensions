@@ -56,7 +56,6 @@
                     try
                     {
                         writer.AddOrUpdateDocument(sighting);
-                        writer.AddOrUpdateDocument(sighting);
                     }
                     catch (Exception e)
                     {

@@ -49,10 +49,13 @@
   <ItemGroup>
     <Compile Include="Cfg\FluentIndexConfiguration.cs" />
     <Compile Include="Cfg\IndexConfiguration.cs" />
+    <Compile Include="Cfg\IndexFieldConfiguration.cs" />
     <Compile Include="Cfg\IndexMappingConfiguration.cs" />
+    <Compile Include="Mapping\IIndexClassMap.cs" />
     <Compile Include="Mapping\IIndexMappingProvider.cs" />
     <Compile Include="Mapping\IndexClassMap.cs" />
     <Compile Include="Mapping\IndexFieldMap.cs" />
+    <Compile Include="Mapping\IndexMappingProvider.cs" />
     <Compile Include="QueryHelper.cs" />
     <Compile Include="Reflection\ReflectionHelper.cs" />
     <Compile Include="SearchResultEnumerator.cs" />
