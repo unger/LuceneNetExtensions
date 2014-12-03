@@ -7,6 +7,8 @@
     using Lucene.Net.Analysis;
     using Lucene.Net.Documents;
 
+    using LuceneNetExtensions.Cfg;
+
     public interface IIndexMappingProvider<T> : IIndexMappingProvider
     {
         Document GetDocument(T entity);
@@ -15,16 +17,16 @@
 
         string GetFieldName<TReturn>(Expression<Func<T, TReturn>> expression);
 
-        IndexFieldMap GetFieldMap<TReturn>(Expression<Func<T, TReturn>> expression);
+        IndexFieldConfiguration GetField<TReturn>(Expression<Func<T, TReturn>> expression);
     }
 
     public interface IIndexMappingProvider
     {
         Type ModelType { get; }
 
-        IReadOnlyCollection<IndexFieldMap> Identifiers { get; }
+        IReadOnlyCollection<IndexFieldConfiguration> Identifiers { get; }
 
-        IReadOnlyCollection<IndexFieldMap> Fields { get; }
+        IReadOnlyCollection<IndexFieldConfiguration> Fields { get; }
 
         string GetIndexName();
 

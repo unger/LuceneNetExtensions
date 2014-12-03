@@ -5,10 +5,12 @@
     using System.Collections.ObjectModel;
     using System.Linq;
     using System.Linq.Expressions;
+    using System.Reflection;
 
     using Lucene.Net.Analysis;
     using Lucene.Net.Documents;
 
+    using LuceneNetExtensions.Cfg;
     using LuceneNetExtensions.Reflection;
 
     public class IndexMappingProvider<T> : IIndexMappingProvider<T>
@@ -19,19 +21,24 @@
 
         private readonly bool isReadonly;
 
-        private readonly List<IndexFieldMap> identifierFields;
-
-        private readonly List<IndexFieldMap> fields;
+        private readonly Dictionary<string, PropertyInfo> fieldPropertyMap = new Dictionary<string, PropertyInfo>();
 
         private Document reusableDocument;
 
-        public IndexMappingProvider(string indexName, Analyzer analyzer, bool isReadonly, List<IndexFieldMap> identifierFields, List<IndexFieldMap> fields)
+        public IndexMappingProvider(string indexName, Analyzer analyzer, bool isReadonly, List<IndexFieldConfiguration> fields)
         {
+            fields = fields ?? new List<IndexFieldConfiguration>();
             this.indexName = indexName;
             this.analyzer = analyzer;
             this.isReadonly = isReadonly;
-            this.identifierFields = identifierFields ?? new List<IndexFieldMap>();
-            this.fields = fields ?? new List<IndexFieldMap>();
+
+            foreach (var field in fields)
+            {
+                this.fieldPropertyMap.Add(field.Name, field.PropertyInfo);
+            }
+
+            this.Fields = new ReadOnlyCollection<IndexFieldConfiguration>(fields);
+            this.Identifiers = new ReadOnlyCollection<IndexFieldConfiguration>(this.Fields.Where(f => f.IsIdentifier).ToList());
         }
 
         public Type ModelType
@@ -42,21 +49,9 @@
             }
         }
 
-        public IReadOnlyCollection<IndexFieldMap> Identifiers
-        {
-            get
-            {
-                return new ReadOnlyCollection<IndexFieldMap>(this.identifierFields);
-            }
-        }
+        public IReadOnlyCollection<IndexFieldConfiguration> Identifiers { get; private set; }
 
-        public IReadOnlyCollection<IndexFieldMap> Fields
-        {
-            get
-            {
-                return new ReadOnlyCollection<IndexFieldMap>(this.fields);
-            }
-        }
+        public IReadOnlyCollection<IndexFieldConfiguration> Fields { get; private set; }
 
         private Document ReusableDocument
         {
@@ -88,14 +83,14 @@
 
         public bool HasIdentifier()
         {
-            return this.identifierFields.Any();
+            return this.Identifiers.Any();
         }
 
         public Document GetDocument(T entity)
         {
             foreach (var field in this.Fields)
             {
-                field.UpdateFieldValue(entity);
+                this.SetFieldValue(field.Fieldable, field.PropertyInfo.GetValue(entity));
             }
 
             return this.ReusableDocument;
@@ -107,12 +102,12 @@
 
             foreach (var field in this.Fields)
             {
-                var propertyValues = doc.GetValues(field.FieldName);
+                var propertyValues = doc.GetValues(field.Name);
 
                 if (propertyValues.Length > 0)
                 {
-                    var typedValue = SimpleTypeConverter.ConvertValue(field.PropertyType, propertyValues);
-                    field.SetPropertyValue(entity, typedValue);
+                    var typedValue = SimpleTypeConverter.ConvertValue(field.PropertyInfo.PropertyType, propertyValues);
+                    field.PropertyInfo.SetValue(entity, typedValue);
                 }
             }
 
@@ -121,17 +116,17 @@
 
         public string GetFieldName<TReturn>(Expression<Func<T, TReturn>> expression)
         {
-            var field = this.GetFieldMap(expression);
-            return (field == null) ? string.Empty : field.FieldName;
+            var field = this.GetField(expression);
+            return (field == null) ? string.Empty : field.Name;
         }
 
-        public IndexFieldMap GetFieldMap<TReturn>(Expression<Func<T, TReturn>> expression)
+        public IndexFieldConfiguration GetField<TReturn>(Expression<Func<T, TReturn>> expression)
         {
             var prop = ReflectionHelper.GetPropertyInfo(expression);
 
             foreach (var field in this.Fields)
             {
-                if (prop.Name == field.PropertyName)
+                if (prop.Name == field.PropertyInfo.Name)
                 {
                     return field;
                 }
@@ -149,6 +144,42 @@
             }
 
             return document;
+        }
+
+        private void SetFieldValue(IFieldable fieldable, object value)
+        {
+            var field = fieldable as Field;
+            if (field != null)
+            {
+                var stringValue = (value ?? string.Empty).ToString();
+                field.SetValue(stringValue);
+                return;
+            }
+
+            var numericField = fieldable as NumericField;
+            if (numericField != null)
+            {
+                if (value is int)
+                {
+                    numericField.SetIntValue((int)value);
+                }
+                else if (value is long)
+                {
+                    numericField.SetLongValue((long)value);
+                }
+                else if (value is decimal || value is double)
+                {
+                    numericField.SetDoubleValue(Convert.ToDouble(value));
+                }
+                else if (value is float)
+                {
+                    numericField.SetDoubleValue(Convert.ToSingle(value));
+                }
+                else
+                {
+                    numericField.SetIntValue(0);
+                }
+            }
         }
     }
 }

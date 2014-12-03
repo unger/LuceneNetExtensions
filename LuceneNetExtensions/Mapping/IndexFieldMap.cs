@@ -6,79 +6,36 @@
     using Lucene.Net.Analysis;
     using Lucene.Net.Documents;
 
+    using LuceneNetExtensions.Cfg;
+
     public class IndexFieldMap
     {
         private const int FieldPrecision = 4;
 
         private readonly PropertyInfo propertyInfo;
-
-        private readonly IFieldable fieldable;
+        private readonly Type fieldType;
+        private readonly bool isIdentifier;
 
         private Field.Store fieldStore = Field.Store.YES;
         private Field.Index fieldIndex = Field.Index.NOT_ANALYZED;
         private Field.TermVector fieldTermVector = Field.TermVector.NO;
 
-        private Analyzer analyzer;
-
-        private bool? isNumeric;
-
-        public IndexFieldMap(PropertyInfo propertyInfo)
-            : this(propertyInfo, propertyInfo.Name)
+        public IndexFieldMap(PropertyInfo propertyInfo, bool isIdentifier = false)
+            : this(propertyInfo, propertyInfo.Name, isIdentifier)
         {
         }
 
-        public IndexFieldMap(PropertyInfo propertyInfo, string fieldName)
+        public IndexFieldMap(PropertyInfo propertyInfo, string fieldName, bool isIdentifier = false)
         {
             this.propertyInfo = propertyInfo;
             this.FieldName = string.IsNullOrWhiteSpace(fieldName) ? propertyInfo.Name : fieldName;
-            this.FieldType = propertyInfo.PropertyType;
-            this.fieldable = this.CreateEmptyField();
+            this.fieldType = propertyInfo.PropertyType;
+            this.isIdentifier = isIdentifier;
         }
 
         public string FieldName { get; private set; }
 
-        public Type FieldType { get; private set; }
-
-        public string PropertyName
-        {
-            get
-            {
-                return this.propertyInfo.Name;
-            }
-        }
-
-        public Type PropertyType
-        {
-            get
-            {
-                return this.propertyInfo.PropertyType;
-            }
-        }
-
-        public IFieldable Fieldable
-        {
-            get
-            {
-                return this.fieldable;
-            }
-        }
-
-        public bool IsNumeric
-        {
-            get
-            {
-                if (!this.isNumeric.HasValue)
-                {
-                    this.isNumeric = this.FieldType.IsAssignableFrom(typeof(int))
-                                     || this.FieldType.IsAssignableFrom(typeof(decimal))
-                                     || this.FieldType.IsAssignableFrom(typeof(float))
-                                     || this.FieldType.IsAssignableFrom(typeof(double))
-                                     || this.FieldType.IsAssignableFrom(typeof(long));
-                }
-
-                return this.isNumeric.Value;
-            }
-        }
+        public Analyzer Analyzer { get; private set; }
 
         public IndexFieldMap NotStored()
         {
@@ -136,77 +93,24 @@
             return this;
         }
 
-        public void SetPropertyValue<T>(T obj, object value)
+        public IndexFieldConfiguration BuildFieldConfiguration()
         {
-            this.propertyInfo.SetValue(obj, value);
-        }
-
-        public object GetPropertyValue<T>(T obj)
-        {
-            return this.propertyInfo.GetValue(obj);
-        }
-
-        public void UpdateFieldValue<T>(T entity)
-        {
-            this.SetFieldValue(this.GetPropertyValue(entity));
-        }
-
-        public Analyzer GetAnalyzer()
-        {
-            return this.analyzer;
+            return new IndexFieldConfiguration(
+                name: this.FieldName,
+                type: this.fieldType,
+                propertyInfo: this.propertyInfo,
+                fieldPrecision: FieldPrecision,
+                store: this.fieldStore,
+                index: this.fieldIndex,
+                termVector: this.fieldTermVector,
+                isIdentifier: this.isIdentifier);
         }
 
         private IndexFieldMap SetAnalyzed(Field.Index index, Analyzer fieldAnalyzer = null)
         {
-            this.analyzer = fieldAnalyzer;
+            this.Analyzer = fieldAnalyzer;
             this.fieldIndex = index;
             return this;
-        }
-
-        private IFieldable CreateEmptyField()
-        {
-            if (this.IsNumeric)
-            {
-                return new NumericField(this.FieldName, FieldPrecision, this.fieldStore, this.fieldIndex != Field.Index.NO);
-            }
-
-            return new Field(this.FieldName, string.Empty, this.fieldStore, this.fieldIndex, this.fieldTermVector);
-        }
-
-        private void SetFieldValue(object value)
-        {
-            var field = this.fieldable as Field;
-            if (field != null)
-            {
-                var stringValue = (value ?? string.Empty).ToString();
-                field.SetValue(stringValue);
-                return;
-            }
-
-            var numericField = this.fieldable as NumericField;
-            if (numericField != null)
-            {
-                if (value is int)
-                {
-                    numericField.SetIntValue((int)value);
-                }
-                else if (value is long)
-                {
-                    numericField.SetLongValue((long)value);
-                }
-                else if (value is decimal || value is double)
-                {
-                    numericField.SetDoubleValue(Convert.ToDouble(value));
-                }
-                else if (value is float)
-                {
-                    numericField.SetDoubleValue(Convert.ToSingle(value));
-                }
-                else
-                {
-                    numericField.SetIntValue(0);
-                }
-            }
         }
     }
 }

@@ -28,23 +28,23 @@
 
                 if (identifiers.Count == 1)
                 {
-                    var id = identifiers.First();
-                    var idValue = id.GetPropertyValue(entity);
+                    var idField = identifiers.First();
+                    var idValue = idField.PropertyInfo.GetValue(entity);
                     if (idValue != null)
                     {
-                        this.writer.UpdateDocument(new Term(id.FieldName, idValue.ToString()), this.mapper.GetDocument(entity));
+                        this.writer.UpdateDocument(new Term(idField.Name, idValue.ToString()), this.mapper.GetDocument(entity));
                         return;
                     }
                 }
                 else
                 {
                     var query = new BooleanQuery();
-                    foreach (var id in identifiers)
+                    foreach (var idField in identifiers)
                     {
-                        var idValue = id.GetPropertyValue(entity);
+                        var idValue = idField.PropertyInfo.GetValue(entity);
                         if (idValue != null)
                         {
-                            query.Add(new TermQuery(new Term(id.FieldName, idValue.ToString())), Occur.MUST);
+                            query.Add(new TermQuery(new Term(idField.Name, idValue.ToString())), Occur.MUST);
                         }
                     }
 

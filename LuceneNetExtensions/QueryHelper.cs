@@ -8,6 +8,7 @@
     using Lucene.Net.Index;
     using Lucene.Net.Search;
 
+    using LuceneNetExtensions.Cfg;
     using LuceneNetExtensions.Mapping;
 
     public class QueryHelper<T>
@@ -58,8 +59,8 @@
 
         public SortField CreateSortField<TReturn>(Expression<Func<T, TReturn>> expression, bool reverse = false)
         {
-            var field = this.mapper.GetFieldMap(expression);
-            return new SortField(field.FieldName, this.GetSortFieldType(field), reverse);
+            var field = this.mapper.GetField(expression);
+            return new SortField(field.Name, this.GetSortFieldType(field), reverse);
         }
 
         public Sort CreateSort(params SortField[] sortfields)
@@ -67,14 +68,14 @@
             return new Sort(sortfields);
         }
 
-        private int GetSortFieldType(IndexFieldMap field)
+        private int GetSortFieldType(IndexFieldConfiguration field)
         {
-            if (field.FieldType.IsAssignableFrom(typeof(int)))
+            if (field.Type.IsAssignableFrom(typeof(int)))
             {
                 return SortField.INT;
             }
 
-            if (field.FieldType.IsAssignableFrom(typeof(string)))
+            if (field.Type.IsAssignableFrom(typeof(string)))
             {
                 return SortField.STRING;
             }

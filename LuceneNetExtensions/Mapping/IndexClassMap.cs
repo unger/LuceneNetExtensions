@@ -15,8 +15,6 @@
 
     public class IndexClassMap<T> : IIndexClassMap
     {
-        private readonly Dictionary<string, IndexFieldMap> identifierFields = new Dictionary<string, IndexFieldMap>();
-
         private readonly Dictionary<string, IndexFieldMap> fields = new Dictionary<string, IndexFieldMap>();
 
         private string indexName;
@@ -33,8 +31,7 @@
                 indexName: this.GetIndexName(),
                 analyzer: this.GetAnalyzer(),
                 isReadonly: this.readonlyIndex,
-                identifierFields: this.identifierFields.Select(kvp => kvp.Value).ToList(),
-                fields: this.fields.Select(kvp => kvp.Value).ToList());
+                fields: this.fields.Select(kvp => kvp.Value.BuildFieldConfiguration()).ToList());
         }
 
         protected void Readonly()
@@ -52,21 +49,20 @@
             this.documentAnalyzer = analyzer;
         }
 
-        protected IndexFieldMap Id(Expression<Func<T, object>> propertyExpression)
+        protected IndexFieldMap Id(Expression<Func<T, object>> propertyExpression, string fieldName = null)
         {
-            var fieldMap = this.Map(propertyExpression, null);
-            this.identifierFields.Add(fieldMap.PropertyName, fieldMap);
+            var prop = ReflectionHelper.GetPropertyInfo(propertyExpression);
+            var fieldMap = new IndexFieldMap(prop, fieldName, isIdentifier: true);
+            this.fields.Add(prop.Name, fieldMap);
             return fieldMap;
         }
 
-        protected IndexFieldMap Map(Expression<Func<T, object>> propertyExpression)
+        protected IndexFieldMap Map(Expression<Func<T, object>> propertyExpression, string fieldName = null)
         {
-            return this.Map(propertyExpression, null);
-        }
-
-        protected IndexFieldMap Map(Expression<Func<T, object>> propertyExpression, string columnName)
-        {
-            return this.Map(ReflectionHelper.GetPropertyInfo(propertyExpression), columnName);
+            var prop = ReflectionHelper.GetPropertyInfo(propertyExpression);
+            var fieldMap = new IndexFieldMap(prop, fieldName);
+            this.fields.Add(prop.Name, fieldMap);
+            return fieldMap;
         }
 
         protected void MapPublicProperties()
@@ -101,7 +97,7 @@
                 var fieldAnalyzers = new List<KeyValuePair<string, Analyzer>>();
                 foreach (var field in this.fields.Select(kvp => kvp.Value))
                 {
-                    var fieldAnalyzer = field.GetAnalyzer();
+                    var fieldAnalyzer = field.Analyzer;
                     if (fieldAnalyzer != null)
                     {
                         fieldAnalyzers.Add(new KeyValuePair<string, Analyzer>(field.FieldName, fieldAnalyzer));
@@ -123,15 +119,6 @@
             }
 
             return this.documentAnalyzer;
-        }
-
-        private IndexFieldMap Map(PropertyInfo property, string fieldName)
-        {
-            var fieldMap = new IndexFieldMap(property, fieldName);
-
-            this.fields.Add(fieldMap.PropertyName, fieldMap);
-
-            return fieldMap;
         }
     }
 }
