@@ -27,12 +27,34 @@
         }
 
         // GET: Home
-        public ActionResult Index()
+        public ActionResult Index(string id)
         {
+
+            Query query;
+
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                var qh = this.indexManager.GetQueryHelper<Sighting>();
+                var bq = new BooleanQuery
+                             {
+                                 { qh.CreateTermQuery(s => s.SpeciesName, id), Occur.SHOULD },
+                                 { qh.CreateTermQuery(s => s.Municipality, id), Occur.SHOULD },
+                                 { qh.CreateTermQuery(s => s.Province, id), Occur.SHOULD },
+                                 { qh.CreateTermQuery(s => s.Site, id), Occur.SHOULD },
+                                 { qh.CreateTermQuery(s => s.Parish, id), Occur.SHOULD }
+                             };
+                query = bq;
+            }
+            else
+            {
+                query = new MatchAllDocsQuery();
+            }
+
+
             List<Sighting> sightings;
             using (var searcher = this.indexManager.GetSearcher<Sighting>())
             {
-                sightings = searcher.Search(new MatchAllDocsQuery(), null).ToList();
+                sightings = searcher.Search(query, null, 100).ToList();
             }
 
             return new ContentResult { Content = JsonConvert.SerializeObject(sightings) };
