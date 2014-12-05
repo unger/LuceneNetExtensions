@@ -1,12 +1,17 @@
 ﻿namespace LuceneNetExtensions.Cfg
 {
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
 
     using Lucene.Net.Documents;
 
     public class IndexFieldConfiguration
     {
+        private IFieldable fieldable;
+
         public IndexFieldConfiguration(string name, Type type, PropertyInfo propertyInfo, int fieldPrecision, Field.Store store, Field.Index index, Field.TermVector termVector, bool isIdentifier)
         {
             this.Name = name;
@@ -18,7 +23,7 @@
             this.Index = index;
             this.TermVector = termVector;
             this.IsIdentifier = isIdentifier;
-            this.Fieldable = this.CreateEmptyField(this.IsNumeric);
+            this.IsCollection = this.IsCollectionType(type);
         }
 
         public string Name { get; private set; }
@@ -31,7 +36,7 @@
 
         public bool IsIdentifier { get; private set; }
 
-        public IFieldable Fieldable { get; set; }
+        public bool IsCollection { get; private set; }
 
         public int FieldPrecision { get; private set; }
 
@@ -40,6 +45,26 @@
         public Field.Index Index { get; private set; }
         
         public Field.TermVector TermVector { get; private set; }
+
+        public IFieldable CreateField()
+        {
+            if (this.IsCollection)
+            {
+                return this.InternalCreateField();
+            }
+
+            return this.fieldable ?? (this.fieldable = this.InternalCreateField());
+        }
+
+        private IFieldable InternalCreateField()
+        {
+            if (this.IsNumeric)
+            {
+                return new NumericField(this.Name, this.FieldPrecision, this.Store, this.Index != Field.Index.NO);
+            }
+
+            return new Field(this.Name, string.Empty, this.Store, this.Index, this.TermVector);
+        }
 
         private bool IsNumericType(Type type)
         {
@@ -50,14 +75,10 @@
                 || type.IsAssignableFrom(typeof(long));
         }
 
-        private IFieldable CreateEmptyField(bool numeric)
+        private bool IsCollectionType(Type type)
         {
-            if (numeric)
-            {
-                return new NumericField(this.Name, this.FieldPrecision, this.Store, this.Index != Field.Index.NO);
-            }
-
-            return new Field(this.Name, string.Empty, this.Store, this.Index, this.TermVector);
+            return type.IsArray
+                || (!type.IsAssignableFrom(typeof(string)) && type.GetInterfaces().Any(t => t == typeof(IEnumerable)));
         }
     }
 }

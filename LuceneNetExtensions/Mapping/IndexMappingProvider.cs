@@ -1,6 +1,7 @@
 ﻿namespace LuceneNetExtensions.Mapping
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
@@ -88,9 +89,30 @@
 
         public Document GetDocument(T entity)
         {
-            foreach (var field in this.Fields)
+            foreach (var fieldConfig in this.Fields)
             {
-                this.SetFieldValue(field.Fieldable, field.PropertyInfo.GetValue(entity));
+                if (fieldConfig.IsCollection)
+                {
+                    this.ReusableDocument.RemoveFields(fieldConfig.Name);
+
+                    var propertyValue = fieldConfig.PropertyInfo.GetValue(entity);
+
+                    if (propertyValue is IEnumerable)
+                    {
+                        var values = propertyValue as IEnumerable;
+
+                        foreach (var value in values)
+                        {
+                            var field = fieldConfig.CreateField();
+                            this.SetFieldValue(field, value);
+                            this.ReusableDocument.Add(field);
+                        }
+                    }
+                }
+                else
+                {
+                    this.SetFieldValue(fieldConfig.CreateField(), fieldConfig.PropertyInfo.GetValue(entity));
+                }
             }
 
             return this.ReusableDocument;
@@ -140,7 +162,7 @@
             var document = new Document();
             foreach (var field in this.Fields)
             {
-                document.Add(field.Fieldable);
+                document.Add(field.CreateField());
             }
 
             return document;
