@@ -1,5 +1,6 @@
 ﻿namespace LuceneNetExtensions.Tests
 {
+    using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
@@ -31,23 +32,21 @@
               })
               .BuildIndexManager();
 
+            this.IndexManager.GetWriter<MyCollectionClass>().DeleteAll();
+        }
+
+        [Test]
+        public void GetStringArrayPropertyReturnSameNumberAsIndexed()
+        {
+            // Arrange
             var writer = this.IndexManager.GetWriter<MyCollectionClass>();
-
             writer.AddOrUpdateDocument(new MyCollectionClass
-                                           {
-                                               ArrayItems = new[] { "Item1", "Item2", "Item3" },
-                                               ListItems = new List<string> { "Item1", "Item2", "Item3" },
-                                               HashItems = new HashSet<string> { "Item1", "Item2", "Item3" },
-                                           });
-
+            {
+                StringArrayItems = new[] { "Item1", "Item2", "Item3" },
+            });
             writer.Commit();
-            writer.Optimize();
 
-        }
-
-        [Test]
-        public void GetArrayPropertyReturnSameNumberAsIndexed()
-        {
+            // Act
             var query = new MatchAllDocsQuery();
             MyCollectionClass element;
             using (var searcher = this.IndexManager.GetSearcher<MyCollectionClass>())
@@ -55,13 +54,23 @@
                 element = searcher.Search(query).FirstOrDefault();
             }
 
+            // Assert
             Assert.NotNull(element);
-            Assert.AreEqual(3, element.ArrayItems.Length);
+            Assert.AreEqual(3, element.StringArrayItems.Length);
         }
 
         [Test]
-        public void GetListPropertyReturnSameNumberAsIndexed()
+        public void GetStringListPropertyReturnSameNumberAsIndexed()
         {
+            // Arrange
+            var writer = this.IndexManager.GetWriter<MyCollectionClass>();
+            writer.AddOrUpdateDocument(new MyCollectionClass
+            {
+                StringListItems = new List<string> { "Item1", "Item2", "Item3" },
+            });
+            writer.Commit();
+
+            // Act
             var query = new MatchAllDocsQuery();
             MyCollectionClass element;
             using (var searcher = this.IndexManager.GetSearcher<MyCollectionClass>())
@@ -69,13 +78,23 @@
                 element = searcher.Search(query).FirstOrDefault();
             }
 
+            // Assert
             Assert.NotNull(element);
-            Assert.AreEqual(3, element.ListItems.Count);
+            Assert.AreEqual(3, element.StringListItems.Count);
         }
 
         [Test]
-        public void GetHashSetPropertyReturnSameNumberAsIndexed()
+        public void GetStringHashSetPropertyReturnSameNumberAsIndexed()
         {
+            // Arrange
+            var writer = this.IndexManager.GetWriter<MyCollectionClass>();
+            writer.AddOrUpdateDocument(new MyCollectionClass
+            {
+                StringHashItems = new HashSet<string> { "Item1", "Item2", "Item3" },
+            });
+            writer.Commit();
+
+            // Act
             var query = new MatchAllDocsQuery();
             MyCollectionClass element;
             using (var searcher = this.IndexManager.GetSearcher<MyCollectionClass>())
@@ -83,10 +102,34 @@
                 element = searcher.Search(query).FirstOrDefault();
             }
 
+            // Assert
             Assert.NotNull(element);
-            Assert.AreEqual(3, element.HashItems.Count);
+            Assert.AreEqual(3, element.StringHashItems.Count);
         }
 
+        [Test]
+        public void GetIntArrayPropertyReturnSameNumberAsIndexed()
+        {
+            // Arrange
+            var writer = this.IndexManager.GetWriter<MyCollectionClass>();
+            writer.AddOrUpdateDocument(new MyCollectionClass
+            {
+                IntArrayItems = new int[] { 1, 2, 3 },
+            });
+            writer.Commit();
+
+            // Act
+            var query = new MatchAllDocsQuery();
+            MyCollectionClass element;
+            using (var searcher = this.IndexManager.GetSearcher<MyCollectionClass>())
+            {
+                element = searcher.Search(query).FirstOrDefault();
+            }
+
+            // Assert
+            Assert.NotNull(element);
+            Assert.AreEqual(3, element.IntArrayItems.Length);
+        }
 
         private class MyCollectionClassMap : IndexClassMap<MyCollectionClass>
         {
@@ -98,11 +141,19 @@
 
         private class MyCollectionClass
         {
-            public string[] ArrayItems { get; set; }
+            public string[] StringArrayItems { get; set; }
 
-            public List<string> ListItems { get; set; }
+            public int[] IntArrayItems { get; set; }
 
-            public HashSet<string> HashItems { get; set; }
+            public decimal[] DecimalArrayItems { get; set; }
+
+            public bool[] BoolArrayItems { get; set; }
+
+            public List<string> StringListItems { get; set; }
+
+            public HashSet<string> StringHashItems { get; set; }
+
+            public Dictionary<string, string> StringDictionaryItems { get; set; }
         }
 
     }
