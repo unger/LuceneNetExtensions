@@ -3,15 +3,59 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Globalization;
+    using System.Threading;
 
     public class SimpleTypeConverter
     {
-        public static object ConvertValue(Type toType, params object[] values)
+        private static Converter<object, object> guidToString = input => input.ToString();
+        private static Converter<object, object> stringToGuid = input =>
+            {
+                Guid guid;
+                return Guid.TryParse((string)input, out guid) ? guid : Guid.Empty;
+            };
+
+        private static Dictionary<string, Converter<object, object>> converters = new Dictionary<string, Converter<object, object>>();
+
+        static SimpleTypeConverter()
+        {
+            var guidToStringKey = string.Format("{0},{1}", typeof(Guid).FullName, typeof(string).FullName);
+            var stringToGuidKey = string.Format("{0},{1}", typeof(string).FullName, typeof(Guid).FullName);
+
+            converters.Add(guidToStringKey, guidToString);
+            converters.Add(stringToGuidKey, stringToGuid);
+        }
+
+        public static TDestination ConvertTo<TDestination>(object value)
+        {
+            return ConvertTo<TDestination>(value, Thread.CurrentThread.CurrentCulture);
+        }
+
+        public static TDestination ConvertTo<TDestination>(object value, IFormatProvider formatProvider)
+        {
+            return (TDestination)ConvertTo(typeof(TDestination), value, formatProvider);
+        }
+
+        public static TDestination ConvertTo<TSource, TDestination>(TSource value)
+        {
+            return ConvertTo<TSource, TDestination>(value, Thread.CurrentThread.CurrentCulture);
+        }
+
+        public static TDestination ConvertTo<TSource, TDestination>(TSource value, IFormatProvider formatProvider)
+        {
+            return (TDestination)ConvertTo(typeof(TDestination), value, formatProvider);
+        }
+
+        public static object ConvertTo(Type toType, object value)
+        {
+            return ConvertTo(toType, value, Thread.CurrentThread.CurrentCulture);
+        }
+
+        public static object ConvertTo(Type toType, object value, IFormatProvider formatProvider)
         {
             // Handle Arrays
             if (toType.IsArray)
             {
+                var values = GetValuesArray(value);
                 var elementType = toType.GetElementType();
                 var elements = Array.CreateInstance(elementType ?? typeof(object), values.Length);
 
@@ -21,7 +65,7 @@
                 {
                     for (int i = 0; i < values.Length; i++)
                     {
-                        var typedVal = ConvertValue(elementType, values[i]);
+                        var typedVal = ConvertTo(elementType, values[i]);
                         if (typedVal != null)
                         {
                             method.Invoke(elements, new[] { typedVal, i });
@@ -41,7 +85,7 @@
                 // Handle Nullable separatly
                 if (generictype == typeof(Nullable<>))
                 {
-                    return ConvertSingleValue(elementType, values[0]);
+                    return ConvertSingleValue(elementType, value, formatProvider);
                 }
 
                 // Try to create collection/list
@@ -52,9 +96,10 @@
                     var method = elements.GetType().GetMethod("Add");
                     if (method != null)
                     {
+                        var values = GetValuesArray(value);
                         foreach (var val in values)
                         {
-                            var typedVal = ConvertValue(elementType, val);
+                            var typedVal = ConvertTo(elementType, val);
                             if (typedVal != null)
                             {
                                 method.Invoke(elements, new[] { typedVal });
@@ -67,43 +112,48 @@
             }
 
             // Handle single values, convert the first value to toType
-            return ConvertSingleValue(toType, values[0]);
+            return ConvertSingleValue(toType, value, formatProvider);
         }
 
-        private static object ConvertSingleValue(Type toType, object value)
+        private static object[] GetValuesArray(object value)
         {
-            if (value is string)
+            if (value.GetType().IsArray)
             {
-                var stringValue = value as string;
-                if (toType == typeof(Guid))
-                {
-                    return new Guid(stringValue);
-                }
-
-                if (toType == typeof(float))
-                {
-                    return float.Parse(stringValue, CultureInfo.CurrentCulture);
-                }
-
-                if (toType == typeof(int))
-                {
-                    return int.Parse(stringValue);
-                }
-
-                if (toType == typeof(decimal))
-                {
-                    return decimal.Parse(stringValue, CultureInfo.CurrentCulture);
-                }
+                return (object[])value;
             }
+
+            return new[] { value };
+        }
+
+        private static object ConvertSingleValue(Type toType, object value, IFormatProvider formatProvider)
+        {
+            var converter = GetConverter(value.GetType(), toType);
 
             try
             {
-                return Convert.ChangeType(value, toType);
+                if (converter != null)
+                {
+                    return converter(value);
+                }
+
+                return Convert.ChangeType(value, toType, formatProvider);
             }
             catch (Exception)
             {
                 return GetDefaultValue(toType);
             }
+        }
+
+        private static Converter<object, object> GetConverter(Type fromType, Type toType)
+        {
+            var key = string.Format("{0},{1}", fromType.FullName, toType.FullName);
+            if (converters.ContainsKey(key))
+            {
+                return converters[key];
+            }
+
+            // Return null converter
+            return null;
         }
 
         private static object GetDefaultValue(Type type)

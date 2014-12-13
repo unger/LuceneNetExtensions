@@ -59,6 +59,7 @@
     <Compile Include="Model\Sighting.cs" />
     <Compile Include="ProfileRuleTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SimpleTypeConverterTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

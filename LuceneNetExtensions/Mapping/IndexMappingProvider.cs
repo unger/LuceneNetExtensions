@@ -128,7 +128,7 @@
 
                 if (propertyValues.Length > 0)
                 {
-                    var typedValue = SimpleTypeConverter.ConvertValue(field.PropertyInfo.PropertyType, propertyValues);
+                    var typedValue = SimpleTypeConverter.ConvertTo(field.PropertyInfo.PropertyType, propertyValues);
                     field.PropertyInfo.SetValue(entity, typedValue);
                 }
             }
