@@ -1,8 +1,10 @@
 ﻿namespace LuceneNetExtensions
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.Linq;
     using System.Threading;
 
     public class SimpleTypeConverter
@@ -52,6 +54,16 @@
 
         public static object ConvertTo(Type toType, object value, IFormatProvider formatProvider)
         {
+            if (IsCollectionType(toType))
+            {
+                return ConvertMultipleValues(toType, value, formatProvider);
+            }
+
+            return ConvertSingleValue(toType, value, formatProvider);
+        }
+
+        public static object ConvertMultipleValues(Type toType, object value, IFormatProvider formatProvider)
+        {
             // Handle Arrays
             if (toType.IsArray)
             {
@@ -65,7 +77,7 @@
                 {
                     for (int i = 0; i < values.Length; i++)
                     {
-                        var typedVal = ConvertTo(elementType, values[i]);
+                        var typedVal = ConvertTo(elementType, values.GetValue(i));
                         if (typedVal != null)
                         {
                             method.Invoke(elements, new[] { typedVal, i });
@@ -81,12 +93,6 @@
             {
                 var generictype = toType.GetGenericTypeDefinition();
                 var elementType = toType.GetGenericArguments()[0];
-
-                // Handle Nullable separatly
-                if (generictype == typeof(Nullable<>))
-                {
-                    return ConvertSingleValue(elementType, value, formatProvider);
-                }
 
                 // Try to create collection/list
                 var elements = CreateGenericInstance(generictype, elementType);
@@ -111,29 +117,54 @@
                 return elements;
             }
 
-            // Handle single values, convert the first value to toType
-            return ConvertSingleValue(toType, value, formatProvider);
+            return GetDefaultValue(toType);
         }
 
-        private static object[] GetValuesArray(object value)
+        private static Array GetValuesArray(object value)
         {
             if (value.GetType().IsArray)
             {
-                return (object[])value;
+                return (Array)value;
+            }
+            
+            if (IsCollectionType(value.GetType()))
+            {
+                var array = new ArrayList();
+                foreach (var val in (IEnumerable)value)
+                {
+                    array.Add(val);
+                }
+
+                return array.ToArray();
             }
 
             return new[] { value };
         }
 
+        private static bool IsCollectionType(Type type)
+        {
+            return type.IsArray
+                || (!type.IsAssignableFrom(typeof(string)) && type.GetInterfaces().Any(t => t == typeof(IEnumerable)));
+        }
+
         private static object ConvertSingleValue(Type toType, object value, IFormatProvider formatProvider)
         {
-            var converter = GetConverter(value.GetType(), toType);
+            var converter = value == null ? null : GetConverter(value.GetType(), toType);
 
             try
             {
                 if (converter != null)
                 {
                     return converter(value);
+                }
+
+                if (toType.IsGenericType)
+                {
+                    var underlyingType = Nullable.GetUnderlyingType(toType);
+                    if (underlyingType != null)
+                    {
+                        return Convert.ChangeType(value, underlyingType, formatProvider);
+                    }
                 }
 
                 return Convert.ChangeType(value, toType, formatProvider);
