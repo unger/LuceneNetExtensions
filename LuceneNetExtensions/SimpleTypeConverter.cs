@@ -34,7 +34,7 @@
 
         public static TDestination ConvertTo<TDestination>(object value, IFormatProvider formatProvider)
         {
-            return (TDestination)ConvertTo(typeof(TDestination), value, formatProvider);
+            return (TDestination)ConvertTo(value, typeof(TDestination), formatProvider);
         }
 
         public static TDestination ConvertTo<TSource, TDestination>(TSource value)
@@ -44,25 +44,25 @@
 
         public static TDestination ConvertTo<TSource, TDestination>(TSource value, IFormatProvider formatProvider)
         {
-            return (TDestination)ConvertTo(typeof(TDestination), value, formatProvider);
+            return (TDestination)ConvertTo(value, typeof(TDestination), formatProvider);
         }
 
-        public static object ConvertTo(Type toType, object value)
+        public static object ConvertTo(object value, Type toType)
         {
-            return ConvertTo(toType, value, Thread.CurrentThread.CurrentCulture);
+            return ConvertTo(value, toType, Thread.CurrentThread.CurrentCulture);
         }
 
-        public static object ConvertTo(Type toType, object value, IFormatProvider formatProvider)
+        public static object ConvertTo(object value, Type toType, IFormatProvider formatProvider)
         {
             if (IsCollectionType(toType))
             {
-                return ConvertMultipleValues(toType, value, formatProvider);
+                return ConvertMultipleValues(value, toType, formatProvider);
             }
 
-            return ConvertSingleValue(toType, value, formatProvider);
+            return ConvertSingleValue(value, toType, formatProvider);
         }
 
-        public static object ConvertMultipleValues(Type toType, object value, IFormatProvider formatProvider)
+        public static object ConvertMultipleValues(object value, Type toType, IFormatProvider formatProvider)
         {
             // Handle Arrays
             if (toType.IsArray)
@@ -77,7 +77,7 @@
                 {
                     for (int i = 0; i < values.Length; i++)
                     {
-                        var typedVal = ConvertTo(elementType, values.GetValue(i));
+                        var typedVal = ConvertTo(values.GetValue(i), elementType, formatProvider);
                         if (typedVal != null)
                         {
                             method.Invoke(elements, new[] { typedVal, i });
@@ -105,7 +105,7 @@
                         var values = GetValuesArray(value);
                         foreach (var val in values)
                         {
-                            var typedVal = ConvertTo(elementType, val);
+                            var typedVal = ConvertTo(val, elementType, formatProvider);
                             if (typedVal != null)
                             {
                                 method.Invoke(elements, new[] { typedVal });
@@ -147,7 +147,7 @@
                 || (!type.IsAssignableFrom(typeof(string)) && type.GetInterfaces().Any(t => t == typeof(IEnumerable)));
         }
 
-        private static object ConvertSingleValue(Type toType, object value, IFormatProvider formatProvider)
+        private static object ConvertSingleValue(object value, Type toType, IFormatProvider formatProvider)
         {
             var converter = value == null ? null : GetConverter(value.GetType(), toType);
 
