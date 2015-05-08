@@ -14,6 +14,8 @@
     using LuceneNetExtensions.Cfg;
     using LuceneNetExtensions.Reflection;
 
+    using SafeMapper;
+
     public class IndexMappingProvider<T> : IIndexMappingProvider<T>
     {
         private readonly string indexName;
@@ -23,6 +25,8 @@
         private readonly bool isReadonly;
 
         private readonly Dictionary<string, PropertyInfo> fieldPropertyMap = new Dictionary<string, PropertyInfo>();
+
+        private Type stringArrayType = typeof(string[]);
 
         private Document reusableDocument;
 
@@ -128,7 +132,7 @@
 
                 if (propertyValues.Length > 0)
                 {
-                    var typedValue = SimpleTypeConverter.ConvertTo(propertyValues, field.PropertyInfo.PropertyType);
+                    var typedValue = SafeMap.Convert(propertyValues, this.stringArrayType, field.PropertyInfo.PropertyType);
                     field.PropertyInfo.SetValue(entity, typedValue);
                 }
             }

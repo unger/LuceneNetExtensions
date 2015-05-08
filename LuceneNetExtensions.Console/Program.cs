@@ -1,19 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace LuceneNetExtensions
+﻿namespace LuceneNetExtensions.Console
 {
+    using System;
     using System.Diagnostics;
+    using System.Linq;
+
+    using Lucene.Net.Search;
 
     using LuceneNetExtensions.Cfg;
 
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
+            const int Iterations = 1000000;
+
             IndexManager indexManager = FluentIndexConfiguration.Create()
               .IndexRootPath(null)
               .Mappings(m =>
@@ -25,15 +25,30 @@ namespace LuceneNetExtensions
             var writer = indexManager.GetWriter<Sighting>();
 
             Stopwatch sw = Stopwatch.StartNew();
-            int iterations = 1000000;
-            for (int i = 0; i < iterations; i++)
+            for (int i = 0; i < Iterations; i++)
             {
                 writer.AddOrUpdateDocument(new Sighting { SpeciesName = "Praktejder", Municipality = "Göteborg", Province = "Bohuslän" });
             }
 
             sw.Stop();
+            Console.WriteLine("Indexed {0} items in {1} ms", Iterations, sw.ElapsedMilliseconds);
 
-            Console.WriteLine((sw.ElapsedMilliseconds).ToString());
+            sw.Restart();
+            var searcher = indexManager.GetSearcher<Sighting>();
+
+            var results = searcher.Search(new MatchAllDocsQuery(), Iterations);
+            sw.Stop();
+            Console.WriteLine("Searched all {0} items in {1} ms", results.Count(), sw.ElapsedMilliseconds);
+
+            sw.Restart();
+
+            foreach (var item in results)
+            {
+                // iterate over all results
+            }
+
+            sw.Stop();
+            Console.WriteLine("Enumerated all {0} items in {1} ms", results.Count(), sw.ElapsedMilliseconds);
         }
     }
 }

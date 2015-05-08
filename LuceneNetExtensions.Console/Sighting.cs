@@ -1,4 +1,4 @@
-﻿namespace LuceneNetExtensions
+﻿namespace LuceneNetExtensions.Console
 {
     public class Sighting
     {
