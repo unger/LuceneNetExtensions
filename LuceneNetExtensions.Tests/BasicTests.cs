@@ -1,9 +1,7 @@
 ﻿namespace LuceneNetExtensions.Tests
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Linq.Expressions;
 
     using Lucene.Net.Search;
 
@@ -127,7 +125,6 @@
             var qh = this.IndexManager.GetQueryHelper<Sighting>();
 
             var query = qh.CreateTermQuery(s => s.SpeciesName, "Praktejder");
-            int totalHits;
             List<Sighting> sightings;
 
             using (var searcher = this.IndexManager.GetSearcher<Sighting>())

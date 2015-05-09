@@ -63,7 +63,6 @@
     <Compile Include="QueryHelper.cs" />
     <Compile Include="Reflection\ReflectionHelper.cs" />
     <Compile Include="SearchResultEnumerator.cs" />
-    <Compile Include="SimpleTypeConverter.cs" />
     <Compile Include="IndexManager.cs" />
     <Compile Include="IndexMappers.cs" />
     <Compile Include="IndexSearcher.cs" />

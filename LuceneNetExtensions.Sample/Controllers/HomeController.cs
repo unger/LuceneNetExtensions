@@ -26,10 +26,8 @@
             this.indexManager = indexManager;
         }
 
-        // GET: Home
         public ActionResult Index(string id)
         {
-
             Query query;
 
             if (!string.IsNullOrWhiteSpace(id))
@@ -49,7 +47,6 @@
             {
                 query = new MatchAllDocsQuery();
             }
-
 
             List<Sighting> sightings;
             using (var searcher = this.indexManager.GetSearcher<Sighting>())
@@ -75,15 +72,7 @@
 
                 foreach (var sighting in sightings)
                 {
-                    try
-                    {
-                        writer.AddOrUpdateDocument(sighting);
-                    }
-                    catch (Exception e)
-                    {
-                        
-                        throw;
-                    }
+                    writer.AddOrUpdateDocument(sighting);
                 }
 
                 sb.AppendLine(string.Format("{0} documents added: {1}ms", sightings.Count, sw.ElapsedMilliseconds));

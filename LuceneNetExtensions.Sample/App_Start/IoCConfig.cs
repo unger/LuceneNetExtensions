@@ -1,7 +1,6 @@
-﻿namespace LuceneNetExtensions.Sample.App_Start
+﻿namespace LuceneNetExtensions.Sample
 {
     using System.Configuration;
-    using System.Data;
     using System.Web.Hosting;
     using System.Web.Mvc;
 
@@ -16,16 +15,13 @@
 
     public class IoCConfig
     {
-
         /// <summary>
         /// For more info see 
         /// :https://code.google.com/p/autofac/wiki/MvcIntegration (mvc4 instructions)
         /// </summary>
         public static void RegisterDependencies()
         {
-            #region Create the builder
             var builder = new ContainerBuilder();
-            #endregion
 
             builder.Register<MySqlDatabase>(
                 context =>
@@ -44,7 +40,6 @@
                                     m.Add<SightingMap>();
                                 }).BuildIndexManager();
                     }).SingleInstance();
-
 
 
             #region Setup a common pattern
@@ -108,6 +103,5 @@
             #endregion
 
         }
-
     }
 }
