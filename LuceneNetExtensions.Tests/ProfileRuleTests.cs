@@ -10,7 +10,6 @@
 
     public class ProfileRuleTests
     {
-
         private IndexManager IndexManager { get; set; }
 
         [SetUp]

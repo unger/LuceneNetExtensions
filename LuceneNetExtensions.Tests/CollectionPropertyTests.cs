@@ -1,18 +1,12 @@
 ﻿namespace LuceneNetExtensions.Tests
 {
-    using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
 
-    using Lucene.Net.Analysis;
-    using Lucene.Net.Analysis.Standard;
     using Lucene.Net.Search;
 
     using LuceneNetExtensions.Cfg;
     using LuceneNetExtensions.Mapping;
-    using LuceneNetExtensions.Tests.Mapping;
-    using LuceneNetExtensions.Tests.Model;
 
     using NUnit.Framework;
 
@@ -24,13 +18,11 @@
         [SetUp]
         public void Setup()
         {
-            this.IndexManager = FluentIndexConfiguration.Create()
-              .IndexRootPath(null)
-              .Mappings(m =>
-              {
-                  m.Add<MyCollectionClassMap>();
-              })
-              .BuildIndexManager();
+            this.IndexManager = FluentIndexConfiguration.Create().IndexRootPath(null).Mappings(
+                m =>
+                    {
+                        m.Add<MyCollectionClassMap>();
+                    }).BuildIndexManager();
 
             this.IndexManager.GetWriter<MyCollectionClass>().DeleteAll();
         }
@@ -40,10 +32,8 @@
         {
             // Arrange
             var writer = this.IndexManager.GetWriter<MyCollectionClass>();
-            writer.AddOrUpdateDocument(new MyCollectionClass
-            {
-                StringArrayItems = new[] { "Item1", "Item2", "Item3" },
-            });
+            writer.AddOrUpdateDocument(
+                new MyCollectionClass { StringArrayItems = new[] { "Item1", "Item2", "Item3" }, });
             writer.Commit();
 
             // Act
@@ -64,10 +54,8 @@
         {
             // Arrange
             var writer = this.IndexManager.GetWriter<MyCollectionClass>();
-            writer.AddOrUpdateDocument(new MyCollectionClass
-            {
-                StringListItems = new List<string> { "Item1", "Item2", "Item3" },
-            });
+            writer.AddOrUpdateDocument(
+                new MyCollectionClass { StringListItems = new List<string> { "Item1", "Item2", "Item3" }, });
             writer.Commit();
 
             // Act
@@ -88,10 +76,8 @@
         {
             // Arrange
             var writer = this.IndexManager.GetWriter<MyCollectionClass>();
-            writer.AddOrUpdateDocument(new MyCollectionClass
-            {
-                StringHashItems = new HashSet<string> { "Item1", "Item2", "Item3" },
-            });
+            writer.AddOrUpdateDocument(
+                new MyCollectionClass { StringHashItems = new HashSet<string> { "Item1", "Item2", "Item3" }, });
             writer.Commit();
 
             // Act
@@ -112,10 +98,7 @@
         {
             // Arrange
             var writer = this.IndexManager.GetWriter<MyCollectionClass>();
-            writer.AddOrUpdateDocument(new MyCollectionClass
-            {
-                IntArrayItems = new int[] { 1, 2, 3 },
-            });
+            writer.AddOrUpdateDocument(new MyCollectionClass { IntArrayItems = new[] { 1, 2, 3 }, });
             writer.Commit();
 
             // Act
@@ -155,7 +138,5 @@
 
             public Dictionary<string, string> StringDictionaryItems { get; set; }
         }
-
     }
-
 }

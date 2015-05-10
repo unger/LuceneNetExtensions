@@ -23,5 +23,4 @@
             return new LowerCaseFilter(new KeywordTokenizer(reader));
         }
     }
-
 }

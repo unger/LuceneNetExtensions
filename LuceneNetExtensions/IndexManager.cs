@@ -94,7 +94,22 @@
             var indexName = classMapper.GetIndexName();
             var indexPath = this.GetIndexFullPath(indexName);
 
-            return this.indexWriters.GetOrAdd(indexName, key => new IndexWriter(this.GetDirectory(indexPath), classMapper.GetAnalyzer(), IndexWriter.MaxFieldLength.UNLIMITED));
+            return this.indexWriters.GetOrAdd(
+                indexName,
+                key =>
+                    {
+                        var directory = this.GetDirectory(indexPath);
+                        if (directory.FileExists(IndexWriter.WRITE_LOCK_NAME))
+                        {
+                            //log.warn("Existing write.lock at [" + folder.getAbsolutePath() + "] has been found and removed. This is a likely result of non-gracefully terminated server. Check for index discrepancies!");
+                            directory.ClearLock(IndexWriter.WRITE_LOCK_NAME);
+                        }
+
+                        return new IndexWriter(
+                            directory,
+                            classMapper.GetAnalyzer(),
+                            IndexWriter.MaxFieldLength.UNLIMITED);
+                    });
         }
 
         private IndexSearcher InternalGetSearcher<T>(IIndexMappingProvider<T> classMapper)

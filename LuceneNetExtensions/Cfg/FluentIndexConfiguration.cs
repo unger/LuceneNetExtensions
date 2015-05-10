@@ -47,10 +47,8 @@
 
             mappingCfg.Apply(this.indexConfiguration);
 
-
             return this.indexConfiguration;
         }
-
 
         public IndexManager BuildIndexManager()
         {
