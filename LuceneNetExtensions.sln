@@ -7,13 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LuceneNetExtensions", "Luce
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LuceneNetExtensions.Tests", "LuceneNetExtensions.Tests\LuceneNetExtensions.Tests.csproj", "{A239CAD6-7EEA-4149-A8F8-8BCB3A8F623D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{D7521EE4-3DDC-4B24-80BF-3429037FC987}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LuceneNetExtensions.Console", "LuceneNetExtensions.Console\LuceneNetExtensions.Console.csproj", "{68BB3C45-A426-409C-9F38-AAA8F1B21AB4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LuceneNetExtensions.Sample", "LuceneNetExtensions.Sample\LuceneNetExtensions.Sample.csproj", "{65BE42DC-D024-44A8-B636-61EA094C86C8}"
