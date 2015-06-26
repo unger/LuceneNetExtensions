@@ -1,0 +1,17 @@
+version: 1.0.{build}
+before_build:
+  - nuget restore ".\LuceneNetExtensions.sln"  
+configuration: Release
+build:
+  project: .\LuceneNetExtensions.sln
+  publish_nuget: true
+  verbosity: minimal
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '{version}'
+artifacts:
+- path: '*.nupkg'
+  name: Nuget
